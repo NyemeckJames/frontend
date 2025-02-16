@@ -5,12 +5,11 @@ import { ReactNode } from "react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  userRole: "admin" | "organizer" | "participant"; // Passez le rôle de l'utilisateur ici
+  userRole?: "admin" | "organizer" | "participant"; // ? signifie qu'il peut être absent
 }
 
-export default function DashboardLayout({ children, userRole }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, userRole = "admin" }: DashboardLayoutProps) {
   return (
-    
     <div className="flex min-h-screen bg-gray-100">
       {/* Barre latérale */}
       <aside className="w-64 bg-gradient-to-b from-gray-800 to-gray-900 text-white p-6 shadow-lg">
