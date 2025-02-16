@@ -6,7 +6,7 @@ import Sidebar from "../component/sidebar";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  userRole: "admin" | "organizer" | "participant"; // Passez le rôle de l'utilisateur ici
+  userRole?: "admin" | "organizer" | "participant"; // ? signifie qu'il peut être absent
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
