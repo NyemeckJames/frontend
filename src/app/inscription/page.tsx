@@ -11,6 +11,7 @@ interface FormValues {
   email: string;
   phone: string;
   password: string;
+  userType: 'participant' | 'organisateur'; 
 }
 
 const schema = yup.object().shape({
@@ -21,6 +22,7 @@ const schema = yup.object().shape({
     .matches(/^\+?\d{9,15}$/, "Numéro invalide")
     .required("Le numéro de téléphone est requis"),
   password: yup.string().min(6, "Minimum 6 caractères").required("Mot de passe requis"),
+  userType: yup.string().oneOf(['participant', 'organisateur'], "Veuillez sélectionner un type d'utilisateur").required("Le type d'utilisateur est requis")
 });
 
 export default function Register() {
@@ -62,6 +64,17 @@ export default function Register() {
               placeholder="Entrez votre email"
             />
             <p className="text-[#8B5E3B] text-sm">{errors.email?.message}</p>
+          </div>
+
+          {/* Type d'utilisateur */}
+          <div>
+            <label className="block text-sm font-medium text-[#1C1C1C]">Type dutilisateur</label>
+              <select {...register("userType")} className="w-full p-2 border rounded">
+                <option value="">-- Sélectionner un rôle (laisser vide = Admin) --</option>
+                <option value="organizer">Organisateur</option>
+                <option value="participant">Participant</option>
+              </select>
+            <p className="text-[#8B5E3B] text-sm">{errors.userType?.message}</p>
           </div>
 
           {/* Téléphone */}
@@ -109,3 +122,7 @@ export default function Register() {
     </div>
   );
 }
+
+
+
+
