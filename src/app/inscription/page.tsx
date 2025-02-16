@@ -69,14 +69,11 @@ export default function Register() {
           {/* Type d'utilisateur */}
           <div>
             <label className="block text-sm font-medium text-[#1C1C1C]">Type dutilisateur</label>
-            <select
-              {...register("userType")}
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:border-[#8B5E3B] bg-white"
-            >
-              <option value="">Sélectionnez votre type</option>
-              <option value="participant">Participant</option>
-              <option value="organisateur">Organisateur</option>
-            </select>
+              <select {...register("userType")} className="w-full p-2 border rounded">
+                <option value="">-- Sélectionner un rôle (laisser vide = Admin) --</option>
+                <option value="organizer">Organisateur</option>
+                <option value="participant">Participant</option>
+              </select>
             <p className="text-[#8B5E3B] text-sm">{errors.userType?.message}</p>
           </div>
 
@@ -125,3 +122,7 @@ export default function Register() {
     </div>
   );
 }
+
+
+
+
