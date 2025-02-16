@@ -19,7 +19,7 @@ export default function ManageEvents() {
 
       {/* Statistiques */}
       <div className="w-full max-w-3xl bg-white p-4 rounded-lg shadow-md mb-4 flex justify-between">
-        <p><strong>Nombre total d'événements :</strong> {totalEvents}</p>
+        <p><strong>Nombre total dévénements :</strong> {totalEvents}</p>
         <p><strong>Total billets :</strong> {totalTickets}</p>
       </div>
 

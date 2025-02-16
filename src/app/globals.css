@@ -21,7 +21,7 @@ body {
 }
 
 .react-calendar__tile--active {
-  background-color: #2563eb !important; /* Bleu Next.js */
+  background-color: #8B5E3B !important; 
   color: white !important;
   border-radius: 50%;
 }
