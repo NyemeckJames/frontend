@@ -64,7 +64,7 @@ export default function CreateEvent() {
     },
   });
 
-  const { fields, remove } = useFieldArray({ control, name: "tickets" });
+  const { fields, append, remove } = useFieldArray({ control, name: "tickets" });
 
   // ✅ Regarder la valeur de isPaidEvent pour afficher le champ Prix si nécessaire
   const isPaidEvent = watch("isPaidEvent");
@@ -156,6 +156,14 @@ export default function CreateEvent() {
             </div>
           ))}
 
+          {/* Bouton Ajouter un billet */}
+          <button
+            type="button"
+            onClick={() => append({ quantity: 1 })}
+            className="bg-[#8B5E3B] text-white px-3 py-2 rounded"
+          >
+            Ajouter un billet
+          </button>
 
           {/* Bouton Créer */}
           <button
