@@ -17,7 +17,7 @@ const DashboardLayout : React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Sidebar component */}
       <Sidebar />
       {/* Main content of the homepage */}
-      <main>
+      <main className="bg-slate-200">
         {children}
       </main>
     </div>
