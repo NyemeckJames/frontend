@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react";
 import Modal from "react-modal";
+import Image from "next/image";
 
 // Définir l'interface pour l'événement
 export interface Evenement {
@@ -15,7 +16,7 @@ export interface Evenement {
     date_creation: string;  // ISO 8601 string
     organisateur: number;   // ID de l'organisateur (peut être un objet User selon la structure)
     billets_disponibles: number;
-    image_url: string;
+    photo: string | null;
 }
 
 
@@ -55,11 +56,7 @@ const EvenementsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {evenements.map((evenement) => (
           <div key={evenement.id} className="bg-white shadow-md rounded-lg overflow-hidden">
-            <img
-              className="w-full h-48 object-cover"
-              src={evenement.image_url}
-              alt={evenement.titre}
-            />
+            <Image src={`http://127.0.0.1:8000${evenement.photo}`} alt={evenement.titre} width={200} height={100} className="rounded-t-lg" />
             <div className="p-4">
               <h2 className="text-xl font-bold">{evenement.titre}</h2>
               <p className="text-gray-500">{evenement.date_heure}</p>

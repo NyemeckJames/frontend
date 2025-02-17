@@ -5,7 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+
 
 interface FormValues {
   email: string;
@@ -80,8 +80,14 @@ export default function Login() {
         localStorage.setItem("token", data.access);
         localStorage.setItem("roles", JSON.stringify(data.user.role));
         localStorage.setItem("user", JSON.stringify(data.user));
+        if (data.user.role === "ADMINISTRATEUR" || data.user.role === "ORGANISATEUR") {
+          router.replace("/interfaces/new-event/");
+        }
+        if (data.user.role === "PARTICIPANT") {
+          router.replace("/interfaces/participant/event-list/");
+        }
         alert("User log in  succesfully");
-        router.replace("/event/events/create");
+        
       } else {
         console.error("Error registring user ", response.statusText);
       }
@@ -91,12 +97,7 @@ export default function Login() {
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.replace("/HomePage"); // Redirect to home if logged in
-    }
-  }, [router]);
+
 
 
   return (
