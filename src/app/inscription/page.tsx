@@ -11,6 +11,7 @@ interface FormValues {
   email: string;
   phone: string;
   password: string;
+  confirmPassword: string;
   userType: 'participant' | 'organisateur'; 
 }
 
@@ -22,6 +23,10 @@ const schema = yup.object().shape({
     .matches(/^\+?\d{9,15}$/, "Numéro invalide")
     .required("Le numéro de téléphone est requis"),
   password: yup.string().min(6, "Minimum 6 caractères").required("Mot de passe requis"),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("password")], "Les mots de passe ne correspondent pas")
+    .required("Veuillez confirmer votre mot de passe"),
   userType: yup.string().oneOf(['participant', 'organisateur'], "Veuillez sélectionner un type d'utilisateur").required("Le type d'utilisateur est requis")
 });
 
@@ -96,10 +101,21 @@ export default function Register() {
               {...register("password")}
               type="password"
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:border-[#8B5E3B] bg-white"
-              placeholder="Entrez votre mot de passe"
-            />
+              placeholder="Entrez votre mot de passe"/>
             <p className="text-[#8B5E3B] text-sm">{errors.password?.message}</p>
           </div>
+
+          {/* Confirmation du mot de passe */}
+          <div>
+            <label className="block text-sm font-medium text-[#1C1C1C]">Confirmez le mot de passe</label>
+            <input
+              {...register("confirmPassword")}
+              type="password"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:border-[#8B5E3B] bg-white"
+              placeholder="Ressaisissez votre mot de passe"/>
+            <p className="text-[#8B5E3B] text-sm">{errors.confirmPassword?.message}</p>
+          </div>
+
 
           {/* Formulaire de connexion ici */}
 
