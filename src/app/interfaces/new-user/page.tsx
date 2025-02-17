@@ -1,8 +1,9 @@
 "use client";
 
+import withAuth from "@/app/component/WithAuth";
 import { useState } from "react";
 
-export default function AjouterUtilisateur() {
+const AjouterUtilisateur = ()=> {
   const [user, setUser] = useState({ name: "", email: "", role: "organizer" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -71,3 +72,5 @@ export default function AjouterUtilisateur() {
     </div>
   );
 }
+
+export default withAuth(AjouterUtilisateur,['ADMINISTRATEUR'])

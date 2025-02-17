@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import withAuth from "@/app/component/WithAuth";
 import axios from "axios";
 import { useState } from "react";
 import { useRouter } from "next/navigation";

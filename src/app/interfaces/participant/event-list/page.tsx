@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import Image from "next/image";
+import withAuth from "@/app/component/WithAuth";
 
 // Définir l'interface pour l'événement
 export interface Evenement {
@@ -96,4 +97,4 @@ const EvenementsPage = () => {
   );
 };
 
-export default EvenementsPage;
+export default withAuth(EvenementsPage,['PARTICIPANT']);

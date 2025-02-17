@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
-import dayGridMonth from "@fullcalendar/daygrid"; 
+import dayGridMonth from "@fullcalendar/daygrid"; // Vue mensuelle
+import withAuth from "@/app/component/WithAuth";
 
 interface Event {
   id: string;
@@ -10,7 +11,7 @@ interface Event {
   date: string; // Format YYYY-MM-DD
 }
 
-export default function ParticipantDashboard() {
+const ParticipantDashboard = ()=> {
   // Liste des événements auxquels le participant est inscrit
   const [events] = useState<Event[]>([
     { id: "1", title: "Concert Jazz", date: "2025-02-25" },
@@ -50,3 +51,5 @@ export default function ParticipantDashboard() {
     </div>
   );
 }
+
+export default withAuth(ParticipantDashboard, ['PARTICIPANT'])
