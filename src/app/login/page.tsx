@@ -5,6 +5,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 
 interface FormValues {
   email: string;
@@ -83,6 +85,9 @@ export default function Login() {
      
   
   };
+
+
+
 
   return (
     <div className="flex justify-center items-center h-screen bg-[#1a4162]"> {/* Bleu */}
