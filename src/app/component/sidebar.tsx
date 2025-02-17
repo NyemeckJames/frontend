@@ -278,6 +278,24 @@ const Sidebar = () => {
       toggleBtnRef.current?.classList.toggle("rotate");
     }
   }
+  const handleLogout = () => {
+    try {
+      // Supprime les données utilisateur du localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("tokenExpiry");
+      localStorage.removeItem("roles");
+      localStorage.removeItem("user");
+
+      // Affiche un message de confirmation
+      alert("User logged out successfully");
+
+      // Redirige vers la page de connexion
+      router.replace("/Login"); // Remplacez "/login" par le chemin de votre page de connexion
+    } catch (error) {
+      console.error("Error during logout", error);
+      alert("An error occurred while logging out.");
+    }
+  };
 
   return (
     <aside className='sticky top-0 h-screen p-[5px] px-4 border-r border-r-[#1a4162] overflow-y-auto whitespace-nowrap max-w-[300px] min-w-[150px] bg-[#1a4162]' ref={sidebarRef}>

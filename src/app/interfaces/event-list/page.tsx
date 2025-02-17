@@ -3,8 +3,9 @@
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { deleteEvent } from "@/store/eventSlice";
+import withAuth from "@/app/component/WithAuth";
 
-export default function ManageEvents() {
+const ManageEvents = ()=> {
   const events = useSelector((state: RootState) => state.events.events);
   const dispatch = useDispatch();
 
@@ -58,3 +59,5 @@ export default function ManageEvents() {
     </div>
   );
 }
+
+export default withAuth(ManageEvents,['ORGANISATEUR','ADMINISTRATEUR'])

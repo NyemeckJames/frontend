@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 
 interface FormValues {
@@ -97,7 +98,18 @@ export default function Login() {
     }
   };
 
-
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("roles");
+    if (token && role) {
+      if (role === "ADMINISTRATEUR" || role === "ORGANISATEUR") {
+        router.replace("/interfaces/new-event/");
+      }
+      if (role === "PARTICIPANT") {
+        router.replace("/interfaces/participant/event-list/");
+      }
+    }
+  }, [router]);
 
 
   return (

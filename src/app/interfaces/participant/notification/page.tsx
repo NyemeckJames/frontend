@@ -1,5 +1,6 @@
 "use client";
 
+import withAuth from "@/app/component/WithAuth";
 import { useState } from "react";
 
 interface Notification {
@@ -8,7 +9,7 @@ interface Notification {
   date: string; // Format YYYY-MM-DD
 }
 
-export default function Notifications() {
+const Notifications = ()=> {
   const [notifications] = useState<Notification[]>([
     { id: "1", message: "Rappel : Concert Jazz demain !", date: "2024-06-14" },
     { id: "2", message: "Hackathon Tech dans 3 jours !", date: "2024-07-07" },
@@ -33,3 +34,4 @@ export default function Notifications() {
     </div>
   );
 }
+export default withAuth(Notifications, ['PARTICIPANT'])

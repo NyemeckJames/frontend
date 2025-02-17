@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
+import withAuth from "@/app/component/WithAuth";
 import axios from "axios";
 import { useState } from "react";
 
@@ -16,7 +17,7 @@ interface EventFormData {
   photo?: File | null;
 }
 
-export default function CreateEvent() {
+const CreateEvent =()=> {
   const [formData, setFormData] = useState<EventFormData>({
     titre: "",
     description: "",
@@ -134,3 +135,5 @@ export default function CreateEvent() {
     </div>
   );
 }
+
+export default withAuth(CreateEvent, ['ORGANISATEUR', 'ADMINISTRATEUR'])

@@ -1,5 +1,6 @@
 "use client";
 
+import withAuth from "@/app/component/WithAuth";
 import { useState } from "react";
 
 interface User {
@@ -9,7 +10,7 @@ interface User {
   role: "organizer" | "participant";
 }
 
-export default function ListeUtilisateurs() {
+const ListeUtilisateurs =()=> {
   // Exemple de données (à remplacer par une API plus tard)
   const [users, setUsers] = useState<User[]>([
     { id: "1", name: "Alice Dupont", email: "alice@example.com", role: "organizer" },
@@ -71,3 +72,5 @@ export default function ListeUtilisateurs() {
     </div>
   );
 }
+
+export default withAuth(ListeUtilisateurs,['ADMINISTRATEUR'])
