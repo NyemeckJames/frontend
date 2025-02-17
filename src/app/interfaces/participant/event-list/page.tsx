@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import Image from "next/image";
 import withAuth from "@/app/component/WithAuth";
+import EventModal from "@/app/component/EventModal";
 
 // Définir l'interface pour l'événement
 export interface Evenement {
@@ -48,51 +50,42 @@ const EvenementsPage = () => {
     setModalIsOpen(false);
     setSelectedEvenement(null);
   };
+  const handleShowModal = ()=>{
+    setModalIsOpen(!modalIsOpen)
+  }
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-semibold mb-6">Événements disponibles</h1>
 
       {/* Affichage des cartes d'événements */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-6">
         {evenements.map((evenement) => (
-          <div key={evenement.id} className="bg-white shadow-md rounded-lg overflow-hidden">
-            <Image src={`http://127.0.0.1:8000${evenement.photo}`} alt={evenement.titre} width={200} height={100} className="rounded-t-lg" />
-            <div className="p-4">
-              <h2 className="text-xl font-bold">{evenement.titre}</h2>
-              <p className="text-gray-500">{evenement.date_heure}</p>
-              <p className="mt-2 text-gray-600">
-                Participants: {evenement.billets_disponibles}
-              </p>
-              <button
-                onClick={() => openModal(evenement)}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-              >
-                Détails
-              </button>
+          <div key={evenement.id} style={{ boxShadow: "5px 5px 5px rgba(0, 0, 0, 0.4)" }} className="card grid grid-cols-1  bg-white rounded-lg overflow-hidden">
+            {/* <Image src={`http://127.0.0.1:8000${evenement.photo}`} alt={evenement.titre} width={200} height={100} className="rounded-t-lg" /> */}
+            <div className="event-photo relative h-36  mx-3 my-2 p-6 bg-black rounded-lg text-white">
+            <Image src={`http://127.0.0.1:8000${evenement.photo}`} alt={evenement.titre} objectFit="cover" layout="fill" className="rounded-lg" />
             </div>
+            <span className="event-type  mx-3 my-1 bg-blue-500 font-semibold w-[25%] text-center text-white rounded-[3px]">Gratuit</span>
+            <span className="published-date mx-3 my-1 text-[13px]" >Publié le : 17/02/2025</span>
+            <span 
+              className="event-name mx-3 font-semibold text-[23px] underline cursor-pointer transition-transform transform duration-300 hover:scale-105 hover:text-[#1a4162]"
+              onClick={() => openModal(evenement)}
+            >
+              FETE DE LA JEUNESSE
+            </span>
+            <p className="event-description mx-3 text-[16px] text-[#a59a9a]">Cet évènement est une fête qui célèbre la jeunesse dans notre pays, jeunesse qui represente le fer de lance de la nation.</p>
+            <div className="event-holder mx-3 my-3 flex flex-row items-center gap-3">
+              <i className="material-icons" style={{'fontSize':'50px'}}>person</i>
+              <span className="text-[20px] font-bold">James Romaric</span>
+            </div>
+            
           </div>
         ))}
       </div>
-
+      {modalIsOpen && <EventModal handleShowModal={handleShowModal}/>}
       {/* Fenêtre modale avec les détails de l'événement */}
-      <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal" overlayClassName="overlay">
-        {selectedEvenement && (
-          <div className="p-6">
-            <h2 className="text-2xl font-bold">{selectedEvenement.titre}</h2>
-            <p className="mt-2">{selectedEvenement.description}</p>
-            <p className="mt-4 text-gray-600">Date et heure de début: {selectedEvenement.date_heure}</p>
-            <p className="mt-4 text-gray-600">Capacité maximale: {selectedEvenement.capacite_max}</p>
-            <p className="mt-4 text-gray-600">Participants inscrits: {selectedEvenement.billets_disponibles}</p>
-            <button
-              onClick={closeModal}
-              className="mt-6 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-            >
-              Fermer
-            </button>
-          </div>
-        )}
-      </Modal>
+      
     </div>
   );
 };

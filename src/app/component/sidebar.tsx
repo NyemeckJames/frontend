@@ -107,14 +107,14 @@ const Sidebar = () => {
                 {
                   id: "Settings",
                   icon: "settings",
-                  label: "Settings",
+                  label: "Paramètres",
                   children: null,
                   url: "#",
                 },
                 {
                   id: "Logout",
                   icon: "logout",
-                  label: "Log Out",
+                  label: "Deconnexion",
                   children: null,
                   url: "#",
                 },
@@ -158,16 +158,16 @@ const Sidebar = () => {
                   url: "#",
                 },
                 {
-                  id: "Parametres",
-                  icon: "Parametres",
-                  label: "Parametres",
+                  id: "Settings",
+                  icon: "settings",
+                  label: "Paramètres",
                   children: null,
                   url: "#",
                 },
                 {
                   id: "Logout",
                   icon: "logout",
-                  label: "Deconnexion",
+                  label: "Déconnexion",
                   children: null,
                   url: "#",
                 },
@@ -234,14 +234,14 @@ const Sidebar = () => {
             {
               id: "Settings",
               icon: "settings",
-              label: "Parametres",
+              label: "Paramètres",
               children: null,
               url: "#",
             },
             {
-              id: "deconnexion",
-              icon: "deconnexion",
-              label: "deconnexion",
+              id: "Logout",
+              icon: "logout",
+              label: "Déconnexion",
               children: null,
               url: "#",
             },
@@ -290,7 +290,7 @@ const Sidebar = () => {
       alert("User logged out successfully");
 
       // Redirige vers la page de connexion
-      router.replace("/Login"); // Remplacez "/login" par le chemin de votre page de connexion
+      router.push("/login"); // Remplacez "/login" par le chemin de votre page de connexion
     } catch (error) {
       console.error("Error during logout", error);
       alert("An error occurred while logging out.");
@@ -333,7 +333,19 @@ const Sidebar = () => {
                     </div>
                 </ul>
                 </>
-            ) : (
+            ) : item.id === "Logout"?(
+              <Link
+                href={item.url}
+                className={`rounded-[0.5em] p-[0.85em] no-underline flex items-center gap-[1em] ${
+                    activeItem === item.url ? " text-white" : ""
+                }`}
+                onClick={() => handleLogout()}
+                >
+                <i className="material-icons">{item.icon}</i>
+                <span className="flex-grow">{item.label}</span>
+                </Link>
+            ):
+             (
                 <Link
                 href={item.url}
                 className={`rounded-[0.5em] p-[0.85em] no-underline flex items-center gap-[1em] ${
