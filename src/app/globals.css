@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -24,4 +24,16 @@ body {
   background-color: #8B5E3B !important; 
   color: white !important;
   border-radius: 50%;
+}
+@layer utilities {
+  .show {
+    @apply grid-rows-[1fr];
+    
+  }
+  .rotate{
+    @apply text-[#fff]
+  }
+  .rotate i:last-child {
+    rotate: 180deg;
+  }
 }
