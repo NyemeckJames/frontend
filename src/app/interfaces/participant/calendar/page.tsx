@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
-import dayGridMonth from "@fullcalendar/daygrid"; // Vue mensuelle
+import dayGridMonth from "@fullcalendar/daygrid"; 
 
 interface Event {
   id: string;
