@@ -33,3 +33,10 @@ export const createNewEvent = async (data: FormData) => {
       throw error;
     }
   };
+
+let tokentmp = "";
+const token_str = localStorage.getItem("token")
+if (token_str){
+  tokentmp = token_str
+}
+export const token = tokentmp;

@@ -83,7 +83,7 @@ const EvenementsPage = () => {
           </div>
         ))}
       </div>
-      {modalIsOpen && <EventModal handleShowModal={handleShowModal}/>}
+      {modalIsOpen && <EventModal handleShowModal={handleShowModal} evenement={selectedEvenement}/>}
       {/* Fenêtre modale avec les détails de l'événement */}
       
     </div>
