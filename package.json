@@ -16,6 +16,7 @@
     "axios": "^1.7.9",
     "frontend": "file:",
     "next": "15.1.7",
+    "next-translate": "^2.6.2",
     "nodemailer": "^6.10.0",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
