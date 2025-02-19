@@ -35,20 +35,14 @@ const EvenementsPage = () => {
   const [startDate, setStartDate] = useState(""); // Date de début du filtre
   
 
-  // Simulation de récupération de l'utilisateur (à adapter avec votre système d'authentification)
-  useEffect(() => {
-    setUser({ id: 1 });
-  }, []);
+ 
 
   // Récupérer les événements depuis l'API après avoir obtenu l'utilisateur
   useEffect(() => {
     if (user && user.id) {
       const fetchEvenements = async () => {
         try {
-          const response = await fetch(`http://localhost:8000/evenements/mes-evenements/${user.id}`);
-          if (!response.ok) {
-            throw new Error(`Erreur: ${response.status} - ${response.statusText}`);
-          }
+          const response = await fetch("http://localhost:8000/evenements/get_all/"); // Modifie l'URL selon ton API
           const data = await response.json();
           console.log("Réponse des événements:", data);
           setEvenements(data);
@@ -58,7 +52,7 @@ const EvenementsPage = () => {
       };
       fetchEvenements();
     }
-  }, [user]);
+  }, []);
 
   // Ouvrir la modale avec les détails de l'événement
   const openModal = (evenement: Evenement) => {
@@ -71,6 +65,9 @@ const EvenementsPage = () => {
     setModalIsOpen(false);
     setSelectedEvenement(null);
   };
+  const handleShowModal = ()=>{
+    setModalIsOpen(!modalIsOpen)
+  }
 
   // Filtrage des événements selon la recherche, le type (Gratuit/Payant), le lieu et les dates
   const filteredEvenements = evenements.filter((evenement) => {
@@ -209,8 +206,9 @@ const EvenementsPage = () => {
           <p className="text-gray-500">Aucun événement trouvé.</p>
         )}
       </div>
-
-      {modalIsOpen && <EventModal handleShowModal={closeModal} />}
+      {modalIsOpen && <EventModal handleShowModal={handleShowModal} evenement={selectedEvenement}/>}
+      {/* Fenêtre modale avec les détails de l'événement */}
+      
     </div>
   );
 };
