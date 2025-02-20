@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 import { useEffect, useState } from "react";
 import Modal from "react-modal";
@@ -17,29 +18,31 @@ export interface Evenement {
   latitude: number;
   longitude: number;
   capacite_max: number;
+  prix: number;
   date_creation: string;
   organisateur: number;
   billets_disponibles: number;
   photo: string | null;
-  is_free: boolean; // true = Gratuit, false = Payant
+  evenementLibre: boolean; // true = Gratuit, false = Payant
+  organisateur_nom: string;
 }
 
 const EvenementsPage = () => {
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedEvenement, setSelectedEvenement] = useState<Evenement | null>(null);
+  const [userParticipations, setUserParticipations] = useState<any>();
   const [search, setSearch] = useState("");
-  const [user, setUser] = useState<any>(null); // Pour gérer l'utilisateur connecté
-  const [filter, setFilter] = useState("payant");
+  const [filter, setFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("");
   const [startDate, setStartDate] = useState(""); // Date de début du filtre
-  
+  const [isLoading, setIsLoading] = useState(false);
 
  
 
   // Récupérer les événements depuis l'API après avoir obtenu l'utilisateur
   useEffect(() => {
-    if (user && user.id) {
+    setIsLoading(true); // Démarre le chargement
       const fetchEvenements = async () => {
         try {
           const response = await fetch("http://localhost:8000/evenements/get_all/"); // Modifie l'URL selon ton API
@@ -49,9 +52,34 @@ const EvenementsPage = () => {
         } catch (error) {
           console.error("Erreur lors du fetch des événements:", error);
         }
+        finally {
+          setIsLoading(false); // Arrête le chargement
+        }
       };
+
+      const fetchUserParticipations = async () => {
+        try {
+          const response = await fetch("http://127.0.0.1:8000/evenements/my-events/", {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              });
+          const data = await response.json();
+          console.log("Evenements inscrits : ", data)
+          setUserParticipations(data);
+          
+          
+        } catch (error) {
+          console.error("Erreur lors du fetch des participations:", error);
+        }
+        
+      };
+      
       fetchEvenements();
-    }
+      fetchUserParticipations();
+    
   }, []);
 
   // Ouvrir la modale avec les détails de l'événement
@@ -60,31 +88,26 @@ const EvenementsPage = () => {
     setModalIsOpen(true);
   };
 
-  // Fermer la modale
-  const closeModal = () => {
-    setModalIsOpen(false);
-    setSelectedEvenement(null);
-  };
   const handleShowModal = ()=>{
     setModalIsOpen(!modalIsOpen)
   }
-
+  const now = new Date();
+  const evenementsValides = evenements.filter((evenement) => {
+    const eventDate = new Date(evenement.date_heure);
+    return eventDate >= now;
+  });
   // Filtrage des événements selon la recherche, le type (Gratuit/Payant), le lieu et les dates
-  const filteredEvenements = evenements.filter((evenement) => {
+  const filteredEvenements = evenementsValides.filter((evenement) => {
     const matchesSearch = evenement.titre.toLowerCase().includes(search.toLowerCase());
     const matchesLocation = evenement.lieu.toLowerCase().includes(locationFilter.toLowerCase());
-    const estGratuit =
-      typeof evenement.is_free === "string"
-        ? evenement.is_free === "true"
-        : evenement.is_free;
 
     let matchesFilter = false;
     if (filter === "all") {
       matchesFilter = true;
     } else if (filter === "gratuit") {
-      matchesFilter = evenement.is_free;
+      matchesFilter = evenement.evenementLibre;
     } else if (filter === "payant") {
-      matchesFilter = !evenement.is_free;
+      matchesFilter = !evenement.evenementLibre;
     }
 
     // Filtre par date
@@ -156,9 +179,30 @@ const EvenementsPage = () => {
       </div>
 
       {/* Affichage des événements filtrés */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading?(<div className="flex justify-center my-4">
+          <div className="w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+        </div>):(<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEvenements.length > 0 ? (
-          filteredEvenements.map((evenement) => (
+          filteredEvenements.map((evenement) => {
+            
+            const isFull = evenement.billets_disponibles === 0;
+            let isParticipant = false;
+            let label = evenement.evenementLibre ? "Gratuit" : "Payant";
+            let labelColor = evenement.evenementLibre ? "bg-blue-500" : "bg-yellow-500";
+            userParticipations?.forEach((event:Evenement) => {
+              if (evenement.id === event.id) {
+                isParticipant = true
+                return
+              }
+            });
+            if (isParticipant) {
+              label = "Déjà participant";
+              labelColor = "bg-green-500";
+            } else if (isFull) {
+              label = "Complet";
+              labelColor = "bg-red-500";
+            }
+            return(
             <div
               key={evenement.id}
               className="card grid grid-cols-1 bg-white rounded-lg overflow-hidden shadow-lg"
@@ -176,11 +220,10 @@ const EvenementsPage = () => {
                 )}
               </div>
               <span
-                className={`event-type mx-3 my-1 font-semibold w-[25%] text-center text-white rounded-[3px] ${
-                  evenement.is_free ? "bg-blue-500" : "bg-yellow-500"
+                className={`event-type mx-3 my-1 font-semibold max-w-[40%] text-center text-white rounded-[3px] ${labelColor
                 }`}
               >
-                {evenement.is_free ? "Gratuit" : "Payant"}
+                {label}
               </span>
               <span className="published-date mx-3 my-1 text-[13px]">
                 Publié le : {new Date(evenement.date_creation).toLocaleDateString()}
@@ -198,15 +241,16 @@ const EvenementsPage = () => {
                 <i className="material-icons" style={{ fontSize: "50px" }}>
                   person
                 </i>
-                <span className="text-[20px] font-bold">Ashdown x</span>
+                <span className="text-[20px] font-bold">{evenement.organisateur_nom}</span>
               </div>
-            </div>
-          ))
+            </div>)
+          })
         ) : (
           <p className="text-gray-500">Aucun événement trouvé.</p>
         )}
-      </div>
-      {modalIsOpen && <EventModal handleShowModal={handleShowModal} evenement={selectedEvenement}/>}
+      </div>)}
+      
+      {modalIsOpen && <EventModal handleShowModal={handleShowModal} evenement={selectedEvenement} userParticipations={userParticipations}/>}
       {/* Fenêtre modale avec les détails de l'événement */}
       
     </div>

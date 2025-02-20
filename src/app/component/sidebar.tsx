@@ -133,7 +133,7 @@ const Sidebar = () => {
                   icon: "notifications",
                   label: "Notifications",
                   children: null,
-                  url: "/interfaces/notifications",
+                  url: "/interfaces/send-notifications",
                 },
                 {
                   id: "evenements",

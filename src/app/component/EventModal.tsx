@@ -6,14 +6,22 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from 'next/navigation';
 
 
-const EventModal = ({handleShowModal, evenement} : {handleShowModal: ()=> void, evenement:any}) => {
+const EventModal = ({handleShowModal, evenement,userParticipations} : {handleShowModal: ()=> void, evenement:any, userParticipations:any}) => {
   const router = useRouter()
   console.log(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY)
   const dateHeure = new Date(evenement.date_heure);
   const dateStr = dateHeure.toLocaleDateString(); // Format: JJ/MM/AAAA
   const heureStr = dateHeure.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const isEventFull = evenement.billets_disponibles <= 0;
+  let isParticipant = false
+  userParticipations.forEach((event:any) => {
+    if (evenement.id === event.id) {
+      isParticipant = true
+      return
+    }
+    });
   const handlePayment = async () => {
-    if (!evenement.evenementLibre) {
+    if (evenement.evenementLibre) {
       router.push(`/interfaces/participant/free-inscription-sucess?event_id=${evenement.id}`);
       return
     }
@@ -26,7 +34,7 @@ const EventModal = ({handleShowModal, evenement} : {handleShowModal: ()=> void, 
           },
           body: JSON.stringify({
             evenement_id: evenement.id,
-            prix: 25000, // En centimes
+            prix: evenement.prix, // En xaf
           }),
         });
     
@@ -59,27 +67,41 @@ const EventModal = ({handleShowModal, evenement} : {handleShowModal: ()=> void, 
             </div>
             <div className="event-informations flex items-start flex-col">
               <h2 className="text-2xl font-bold">{evenement.titre}</h2>
-              {evenement.evenementLibre?(<span className="px-1 my-1 bg-blue-500 font-semibold text-center text-white rounded-[3px]">Accès Gratuit</span>):(<span className="mt-4">Accès Payant</span>)}
+              <span
+                className={`event-type mx-3 my-1 font-semibold w-[auto] text-center text-white rounded-[3px] ${
+                  isParticipant ? "bg-gray-500" : isEventFull ? "bg-red-500" : evenement.evenementLibre ? "bg-blue-500" : "bg-yellow-500"
+                }`}
+              >
+                {isParticipant ? "Déjà participant" : isEventFull ? "Complet" : evenement.evenementLibre ? "Accès Gratuit" : "Accès Payant"}
+              </span>
               <p className="mt-2 text-gray-600">{evenement.description}</p>
               <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 mt-4">
                 <span className="font-semibold text-right">Date :</span> <span>{dateStr}</span>
                 <span className="font-semibold text-right">Heure :</span> <span>{heureStr}</span>
                 <span className="font-semibold text-right">Lieu :</span> <span>{evenement.lieu}</span>
                 <span className="font-semibold text-right">Nombre de places totales :</span> <span>{evenement.capacite_max}</span>
-                <span className="font-semibold text-right">Nombre de places disponibles :</span> <span>{evenement.capacite_max}</span>
+                <span className="font-semibold text-right">Nombre de places disponibles :</span> <span>{evenement.billets_disponibles}</span>
                 <span className="font-semibold text-right">Location :</span> <span><i className="material-icons" >location_on</i></span>
-                {evenement.evenementLibre?(<><span className="font-semibold text-right">Prix de l'entrée :</span> <span>0 Xaf</span></>):(<><span className="font-semibold text-right">Prix de l'entrée :</span> <span>25 000 Xaf</span></>)}
+                <span className="font-semibold text-right">Prix de l'entrée :</span> <span>{evenement.prix}</span>
               </div>
               
               <div className="mt-4 organisateur">
                 <span>Organisateur de l'évènement</span>
                 <div className="event-holder mx-3 my-3 flex flex-row items-center gap-3">
                   <i className="material-icons" style={{'fontSize':'50px'}}>person</i>
-                  <span className="text-[20px] font-bold">James Romaric</span>
+                  <span className="text-[20px] font-bold">{evenement.organisateur_nom}</span>
                 </div>
               </div>
-              <button className='px-2 py-1 w-[auto] self-end bg-blue-700 text-white font-semibold border-none rounded-[3px] transition-transform transform hover:scale-110 hover:bg-blue-900 duration-300' onClick={handlePayment}>Participer</button>
-            </div>
+              <button 
+                className={`px-2 py-1 w-[auto] self-end font-semibold border-none rounded-[3px] transition-transform transform duration-300 ${
+                  isParticipant || isEventFull ? "bg-gray-400 cursor-not-allowed text-white" : "bg-blue-700 text-white font-semibold border-none rounded-[3px] hover:scale-110 hover:bg-blue-900"
+                }`} 
+                onClick={handlePayment} 
+                disabled={isParticipant || isEventFull}
+              >
+                Participer
+              </button>
+          </div>
             
             
         </div>

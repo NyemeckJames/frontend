@@ -2,14 +2,14 @@
 "use client"
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { token } from "@/services/ApiService";
+
 
 const ConfirmationGratuite = () => {
   const router = useRouter();
   const searchParams = useSearchParams()
   const event_id = searchParams.get("event_id")
   const [eventDetails, setEventDetails] = useState<any>();
-  console.log("token is : ", token)
+ 
   useEffect(() => {
 
     const fetchEvenements = async () => {
@@ -17,11 +17,11 @@ const ConfirmationGratuite = () => {
         method : "POST",
         headers: {
             "content-type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
         }
       }); // Modifie l'URL selon ton API
       const data = await response.json();
-      console.log("data : ", data)
+      console.log("Données reçues : ", data)
       setEventDetails(data);
     };
 
