@@ -1,12 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {formatDate,DateSelectArg,EventClickArg,EventApi,} from "@fullcalendar/core";
+import {
+  formatDate,
+  DateSelectArg,
+  EventClickArg,
+  EventApi,
+} from "@fullcalendar/core";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import {Dialog,DialogContent,DialogHeader,DialogTitle,} from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Calendar: React.FC = () => {
   const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
@@ -40,7 +50,7 @@ const Calendar: React.FC = () => {
     // Prompt user for confirmation before deleting an event
     if (
       window.confirm(
-        `etes vous de vouloir supprimer cet evenement??"${selected.event.title}"?`
+        `Are you sure you want to delete the event "${selected.event.title}"?`
       )
     ) {
       selected.event.remove();
@@ -76,12 +86,12 @@ const Calendar: React.FC = () => {
       <div className="flex w-full px-10 justify-start items-start gap-8">
         <div className="w-3/12">
           <div className="py-10 text-2xl font-extrabold px-7">
-            Calendrier de vos evenements
+            Calendar Events
           </div>
           <ul className="space-y-4">
             {currentEvents.length <= 0 && (
               <div className="italic text-center text-gray-400">
-                aucun evenement actuellement
+                No Events Present
               </div>
             )}
 
@@ -136,12 +146,12 @@ const Calendar: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ajouter des detaills a cet evenement</DialogTitle>
+            <DialogTitle>Add New Event Details</DialogTitle>
           </DialogHeader>
           <form className="space-x-5 mb-4" onSubmit={handleAddEvent}>
             <input
               type="text"
-              placeholder="titre de ct evenement "
+              placeholder="Event Title"
               value={newEventTitle}
               onChange={(e) => setNewEventTitle(e.target.value)} // Update new event title as the user types.
               required
@@ -151,7 +161,7 @@ const Calendar: React.FC = () => {
               className="bg-green-500 text-white p-3 mt-5 rounded-md"
               type="submit"
             >
-              Ajouter
+              Add
             </button>{" "}
             {/* Button to submit new event */}
           </form>
