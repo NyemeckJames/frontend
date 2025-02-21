@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { token } from "@/services/ApiService";
 import Image from "next/image";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import ChatComponent from "@/app/component/ChatComponent";
+
+const userStr = localStorage.getItem("user")
+let USER:any;
+if (userStr) {
+  USER = JSON.parse(userStr)
+}
 
 interface Evenement {
   id: number;
@@ -16,6 +24,7 @@ interface Evenement {
 
 const MesEvenements = () => {
   const [evenements, setEvenements] = useState<Evenement[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<Evenement | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,6 +55,20 @@ const MesEvenements = () => {
               <p className="mt-2 text-sm">
                 🎟 <span className={event.type_billet === "PAYANT" ? "text-red-500" : "text-green-500"}>{event.type_billet}</span>
               </p>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    onClick={() => setSelectedEvent(event)}
+                  >
+                    Chater
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogTitle>Discussion - {event.titre}</DialogTitle>
+                  {selectedEvent && <ChatComponent eventId={selectedEvent.id} userId={USER.id} userName={USER.nom} />}
+                </DialogContent>
+              </Dialog>
               <button
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800"
                 onClick={() => router.push(`/evenements/${event.id}`)}

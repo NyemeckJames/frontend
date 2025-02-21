@@ -185,8 +185,23 @@ const Sidebar = () => {
               id: "evenements",
               icon: "event",
               label: "Evenements",
-              children: null,
-              url: "/interfaces/participant/event-list",
+              children: [
+                {
+                  id: "consult-event-list",
+                  icon: "visibility",
+                  label: "Consulter des evenements",
+                  children: null,
+                  url: "/interfaces/participant/event-list",
+                },
+                {
+                  id: "new-event",
+                  icon: "edit",
+                  label: "Mes evenements",
+                  children: null,
+                  url: "/interfaces/participant/my-events",
+                },
+              ],
+              url: "#",
             },
             {
               id: "notifications",
@@ -289,8 +304,7 @@ const Sidebar = () => {
       // Affiche un message de confirmation
       alert("User logged out successfully");
 
-      // Redirige vers la page de connexion
-      router.push("/login"); // Remplacez "/login" par le chemin de votre page de connexion
+      window.location.href = "/login";
     } catch (error) {
       console.error("Error during logout", error);
       alert("An error occurred while logging out.");

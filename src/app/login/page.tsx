@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
+import { useToast } from "@/hooks/use-toast";
+
 interface FormValues {
   email: string;
   password: string;
@@ -42,6 +44,7 @@ const schema = yup.object().shape({
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const {toast} = useToast();
 
   // 🛠️ Vérification automatique du token lors du chargement du composant
   useEffect(() => {
@@ -103,7 +106,11 @@ export default function Login() {
           router.replace("/interfaces/participant/event-list/");
         }
       } else {
-        console.error("Erreur de connexion", response.statusText);
+        toast({
+          description : "Erreur lors de l'envoi de la notification.",
+          variant : "destructive",
+          duration: 2000,
+        })
       }
     } catch (error) {
       console.error("Erreur lors de la connexion", error);

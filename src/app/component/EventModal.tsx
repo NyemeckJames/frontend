@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 
 const EventModal = ({handleShowModal, evenement,userParticipations} : {handleShowModal: ()=> void, evenement:any, userParticipations:any}) => {
+  const [loading, setLoading] = useState(false);
   const router = useRouter()
   console.log(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY)
   const dateHeure = new Date(evenement.date_heure);
@@ -26,6 +28,7 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
       return
     }
     else{
+      setLoading(true);
       try {
         const response = await fetch("http://127.0.0.1:8000/users/create_checkout_session/", {
           method: "POST",
@@ -48,6 +51,9 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
       } catch (error) {
         console.error("Erreur :", error);
       }
+      finally{
+        setLoading(false);
+      }
     }
   
     
@@ -62,7 +68,7 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
             >
               &times;
             </button>
-            <div className="event-photo relative  mx-3 my-2 bg-black rounded-lg text-white">
+            <div className="event-photo relative  mx-3 my-2 bg-white rounded-lg text-white">
               <img src={`http://127.0.0.1:8000${evenement.photo}`} alt={evenement.titre}  className="max-w-full h-auto rounded-lg" />
             </div>
             <div className="event-informations flex items-start flex-col">
@@ -82,7 +88,7 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
                 <span className="font-semibold text-right">Nombre de places totales :</span> <span>{evenement.capacite_max}</span>
                 <span className="font-semibold text-right">Nombre de places disponibles :</span> <span>{evenement.billets_disponibles}</span>
                 <span className="font-semibold text-right">Location :</span> <span><i className="material-icons" >location_on</i></span>
-                <span className="font-semibold text-right">Prix de l'entrée :</span> <span>{evenement.prix}</span>
+                <span className="font-semibold text-right">Prix de l'entrée :</span> <span>{evenement.prix} Xaf</span>
               </div>
               
               <div className="mt-4 organisateur">
@@ -100,6 +106,22 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
                 disabled={isParticipant || isEventFull}
               >
                 Participer
+              </button>
+              <button
+                className={`px-2 py-1 w-[auto] self-end font-semibold border-none rounded-[3px] transition-transform transform duration-300 flex items-center justify-center${
+                  isParticipant || isEventFull ? "bg-gray-400 cursor-not-allowed text-white" : "bg-blue-700 text-white font-semibold border-none rounded-[3px] hover:scale-110 hover:bg-blue-900"
+                }`} 
+                onClick={handlePayment} 
+                disabled={isParticipant || isEventFull}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    En cours...
+                  </>
+                ) : (
+                  "Participer"
+                )}
               </button>
           </div>
             

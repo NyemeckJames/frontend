@@ -208,7 +208,7 @@ const EvenementsPage = () => {
               className="card grid grid-cols-1 bg-white rounded-lg overflow-hidden shadow-lg"
               style={{ boxShadow: "5px 5px 5px rgba(0, 0, 0, 0.4)" }}
             >
-              <div className="event-photo relative h-36 mx-3 my-2 p-6 bg-black rounded-lg text-white">
+              <div className="event-photo relative h-36 mx-3 my-2 p-6 bg-white rounded-lg text-white">
                 {evenement.photo && (
                   <Image
                     src={`http://127.0.0.1:8000${evenement.photo}`}

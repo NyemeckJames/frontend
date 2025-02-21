@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addEvent } from "@/store/eventSlice";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface EventFormData {
@@ -17,6 +19,7 @@ interface EventFormData {
   longitude: number;
   capacite_max: number;
   evenementLibre: boolean;
+  prix:number
   billets_disponibles: number;
   photo?: File | null;
 }
@@ -32,16 +35,31 @@ export default function CreateEvent() {
     latitude: 0,
     longitude: 0,
     capacite_max: 0,
+    prix: 0,
     evenementLibre: false,
     billets_disponibles: 0,
     photo: null,
   });
-
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const {toast} = useToast();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "billets_disponibles" ? { capacite_max: Number(value) } : {}),
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setFormData((prev) => ({
+      ...prev,
+      evenementLibre: isChecked,
+      prix: isChecked ? 0 : prev.prix,
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +69,7 @@ export default function CreateEvent() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
 
     const eventData = new FormData();
@@ -72,13 +91,20 @@ export default function CreateEvent() {
 
       if (response.status === 201) {
         const newEvent = response.data;
+        toast({
+          description : "Événement créé avec succès !",
+          variant : "success",
+          duration: 2000,
+        })
         dispatch(addEvent(newEvent)); // ➜ Ajout dans le store Redux
-        alert("Événement créé avec succès !");
-        router.push("/interfaces/participant/event-list"); // ➜ Redirection
+        router.push("/interfaces/event-list"); // ➜ Redirection
       }
     } catch (error) {
       console.error("Erreur lors de la création de l'événement", error);
       alert("Erreur lors de la création de l'événement");
+    }
+    finally{
+      setLoading(false);
     }
   };
   return (
@@ -101,7 +127,15 @@ export default function CreateEvent() {
 
           <div>
             <label className="block text-sm font-medium text-[#1A4162]">Date</label>
-            <input type="date" name="date_heure" value={formData.date_heure} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white" required min={new Date().toISOString().split("T")[0]} />
+            <input
+              type="datetime-local"
+              name="date_heure"
+              value={formData.date_heure}
+              onChange={handleChange}
+              className="w-full p-2 border rounded-lg bg-white"
+              required
+              min={new Date().toISOString().slice(0, 16)} 
+            />
           </div>
 
           <div>
@@ -114,11 +148,24 @@ export default function CreateEvent() {
               type="checkbox"
               name="evenementLibre"
               checked={formData.evenementLibre}
-              onChange={(e) => setFormData({ ...formData, evenementLibre: e.target.checked })}
+              onChange={handleCheckboxChange}
               className="mr-2"
             />
             <label className="text-sm font-medium text-[#1A4162]">Événement à entrée libre</label>
           </div>
+          {!formData.evenementLibre && (
+            <div>
+              <label className="block text-sm font-medium text-[#1A4162]">Prix (Xaf)</label>
+              <input
+                type="number"
+                name="prix"
+                value={formData.prix}
+                onChange={handleChange}
+                className="w-full p-2 border rounded-lg bg-white"
+                min="0"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-[#1A4162]">Nombre de tickets disponibles</label>
@@ -138,8 +185,19 @@ export default function CreateEvent() {
             <input type="file" accept="image/*" onChange={handleFileChange} className="w-full p-2 border rounded-lg bg-white" />
           </div>
 
-          <button type="submit" className="w-full bg-[#1A4162] text-white py-2 rounded-lg hover:bg-[#8B5E3B] hover:text-white transition">
-            Ajouter lévénement
+          <button
+            type="submit"
+            className="w-full bg-[#1A4162] text-white py-2 rounded-lg hover:bg-[#2e6da3] hover:text-white transition flex items-center justify-center"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Ajout de l'evenement...
+              </>
+            ) : (
+              "Ajouter l'événement"
+            )}
           </button>
         </form>
       </div>

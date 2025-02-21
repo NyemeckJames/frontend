@@ -117,7 +117,7 @@ export default function Register() {
               {...register("phone")}
               type="tel"
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:border-white bg-white text-[#1a4162]"
-              placeholder="Ex: +32 123 456 789"
+              placeholder="Ex: +237 123 456 789"
             />
             <p className="text-white text-sm">{errors.phone?.message}</p>
           </div>
