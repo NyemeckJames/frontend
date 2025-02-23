@@ -13,7 +13,7 @@ interface Notification {
   organisateur_prenom: string;
 }
 
-const NotificationModal = ({handleShowDetails, event_id}:{handleShowDetails:()=> void, event_id:any}) => {
+const NotificationModal = ({handleShowDetails, event_id, socket}:{handleShowDetails:()=> void, event_id:any, socket:any}) => {
   const router = useRouter();
   //const { id } = router.query;
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -32,6 +32,7 @@ const NotificationModal = ({handleShowDetails, event_id}:{handleShowDetails:()=>
             }
           });
         const data = await response.json();
+        console.log("Notif de l'évenmeent : ",data[event_id] )
         setNotifications(data[event_id] || []);
       } catch (error) {
         console.error("Erreur lors du chargement des notifications :", error);
@@ -43,12 +44,32 @@ const NotificationModal = ({handleShowDetails, event_id}:{handleShowDetails:()=>
     fetchNotifications();
   }, [event_id]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (event: MessageEvent) => {
+      const newNotification: Notification = JSON.parse(event.data);
+
+      console.log("Nouvelle notification reçue :", newNotification);
+
+      // Ajouter la nouvelle notification en temps réel
+      if (newNotification.evenement_id === event_id) {
+        setNotifications((prevNotifications) => [newNotification, ...prevNotifications]);
+      }
+    };
+
+    socket.addEventListener("message", handleNewNotification);
+
+    return () => socket.removeEventListener("message", handleNewNotification);
+  }, [socket, event_id]);
+
   if (loading) return <p>Chargement des notifications...</p>;
   if (notifications.length === 0) return <p>Aucune notification pour cet événement.</p>;
 
   return (
     
     <div className="p-4 shadow-md bg-neutral-300 rounded-lg">
+      {notifications.length}
       <h1 className="text-2xl font-bold mb-4">Notifications pour {notifications[0]?.evenement_titre}</h1>
       <p className="text-gray-600">Organisé par {notifications[0]?.organisateur_nom} {notifications[0]?.organisateur_prenom}</p>
 

@@ -20,6 +20,9 @@ const NotificationsList = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [eventId, setEventId] = useState<number>();
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const token = localStorage.getItem("token");  // Récupérer le JWT
+  const wsUrl = `ws://localhost:8000/ws/notifications/?token=${token}`;
 
   // Ouvrir la modale avec les détails de l'événement
     const openModal = (eventId: number) => {
@@ -30,8 +33,28 @@ const NotificationsList = () => {
       setModalIsOpen(!modalIsOpen)
     }
 
+  // Fonction pour récupérer les notifications depuis l'API
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/notifications/liste/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await response.json();
+      console.log("Les notifications : ", data)
+      setNotifications(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des notifications :", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchNotifications = async () => {
+    /*const fetchNotifications = async () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/notifications/liste/", {
           method: "GET",
@@ -47,9 +70,37 @@ const NotificationsList = () => {
       } finally {
         setLoading(false);
       }
-    };
+    };*/
 
     fetchNotifications();
+    // Connexion WebSocket
+    
+    const socket = new WebSocket(wsUrl);
+    setSocket(socket);
+    socket.onopen = () => console.log("WebSocket connecté");
+
+    socket.onmessage = (event) => {
+      const newNotification: Notification = JSON.parse(event.data);
+      console.log("Print notification : ", newNotification)
+
+      // Mettre à jour la liste des notifications en temps réel
+      setNotifications((prevNotifications) => {
+        const eventId = newNotification.evenement_id.toString();
+        const updatedNotifications = { ...prevNotifications };
+
+        if (updatedNotifications[eventId]) {
+          updatedNotifications[eventId] = [newNotification, ...updatedNotifications[eventId]];
+        } else {
+          updatedNotifications[eventId] = [newNotification];
+        }
+
+        return updatedNotifications;
+      });
+    };
+
+    
+
+    return () => socket.close();
   }, []);
   
 
@@ -74,7 +125,7 @@ const NotificationsList = () => {
           ))}
         </ul>
       )}
-      {modalIsOpen && <NotificationModal handleShowDetails={handleShowDetails} event_id={eventId}/>}
+      {modalIsOpen && <NotificationModal handleShowDetails={handleShowDetails} event_id={eventId} socket={socket}/>}
     </div>
   );
 };
