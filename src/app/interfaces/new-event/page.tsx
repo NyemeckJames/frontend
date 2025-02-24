@@ -1,52 +1,42 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import withAuth from "@/app/component/WithAuth";
-import axios from "axios";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addEvent } from "@/store/eventSlice";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Poppins } from "next/font/google";
+import { useDropzone } from "react-dropzone";
+import Image from "next/image";
+import { Loader2, Upload } from "lucide-react";
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
 
-interface EventFormData {
-  titre: string;
-  description: string;
-  date_heure: string;
-  lieu: string;
-  latitude: number;
-  longitude: number;
-  capacite_max: number;
-  evenementLibre: boolean;
-  prix:number
-  billets_disponibles: number;
-  photo?: File | null;
-}
-
-export default function CreateEvent() {
+export default function NewEventPage() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const [formData, setFormData] = useState<EventFormData>({
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [flyer, setFlyer] = useState<File | null>(null);
+  const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState({
     titre: "",
     description: "",
-    date_heure: "",
+    date_debut: "",
+    date_fin: "",
     lieu: "",
-    latitude: 0,
-    longitude: 0,
     capacite_max: 0,
     prix: 0,
     evenementLibre: false,
     billets_disponibles: 0,
-    photo: null,
   });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const {toast} = useToast();
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
       ...(name === "billets_disponibles" ? { capacite_max: Number(value) } : {}),
@@ -54,152 +44,138 @@ export default function CreateEvent() {
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isChecked = e.target.checked;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      evenementLibre: isChecked,
-      prix: isChecked ? 0 : prev.prix,
+      evenementLibre: e.target.checked,
+      prix: e.target.checked ? 0 : prev.prix,
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFormData((prev) => ({ ...prev, photo: e.target.files![0] }));
-    }
-  };
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: { "image/*": [] },
+    onDrop: acceptedFiles => {
+      const file = acceptedFiles[0];
+      setFlyer(file);
+      setFlyerPreview(URL.createObjectURL(file));
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    setLoading(true);
     e.preventDefault();
+    setLoading(true);
 
     const eventData = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null) {
-        eventData.append(key, value as string | Blob);
-      }
-    });
+    Object.entries(formData).forEach(([key, value]) => eventData.append(key, String(value)));
+    if (flyer) eventData.append("flyer", flyer);
 
     try {
       const token = localStorage.getItem("token");
-
-      const response = await axios.post("http://localhost:8000/evenements/create/", eventData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch("http://localhost:8000/evenements/create/", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: eventData,
       });
 
-      if (response.status === 201) {
-        const newEvent = response.data;
-        toast({
-          description : "Événement créé avec succès !",
-          variant : "success",
-          duration: 2000,
-        })
-        dispatch(addEvent(newEvent)); // ➜ Ajout dans le store Redux
-        router.push("/interfaces/event-list"); // ➜ Redirection
+      if (response.ok) {
+        dispatch(addEvent(await response.json()));
+        router.push("/interfaces/event-list");
+      } else {
+        console.error("Erreur lors de la création de l'événement");
       }
     } catch (error) {
-      console.error("Erreur lors de la création de l'événement", error);
-      alert("Erreur lors de la création de l'événement");
-    }
-    finally{
+      console.error("Erreur serveur :", error);
+    } finally {
       setLoading(false);
     }
   };
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-[#FFFFFF] p-6">
-      <div className="bg-[#F5F5F5] p-6 rounded-lg shadow-md w-96 border-2 border-[#1A4162]">
-        <h1 className="text-2xl font-bold mb-4 text-center text-[#1A4162]">Créer un Événement</h1>
-        
-        {message && <p className="text-center text-[#1A4162] font-semibold">{message}</p>}
+    <div className={`${poppins.className} flex items-center justify-center min-h-screen bg-gray-900`}>
+      <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-[26px] m-4 w-full max-w-2xl">
+        <div className="border-[20px] border-transparent rounded-[20px] bg-white shadow-lg p-10">
+          <h1 className="text-center text-4xl font-bold text-gray-800 mb-6">
+            Créer un nouvel Événement 
+          </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#1A4162]">Nom de lévénement</label>
-            <input type="text" name="titre" value={formData.titre} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white" required />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#1A4162]">Description</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white"></textarea>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#1A4162]">Date</label>
-            <input
-              type="datetime-local"
-              name="date_heure"
-              value={formData.date_heure}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg bg-white"
-              required
-              min={new Date().toISOString().slice(0, 16)} 
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#1A4162]">Lieu</label>
-            <input type="text" name="lieu" value={formData.lieu} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white" required />
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="evenementLibre"
-              checked={formData.evenementLibre}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            <label className="text-sm font-medium text-[#1A4162]">Événement à entrée libre</label>
-          </div>
-          {!formData.evenementLibre && (
-            <div>
-              <label className="block text-sm font-medium text-[#1A4162]">Prix (Xaf)</label>
-              <input
-                type="number"
-                name="prix"
-                value={formData.prix}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg bg-white"
-                min="0"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-[#1A4162]">Nombre de tickets disponibles</label>
-            <input
-              type="number"
-              name="billets_disponibles"
-              value={formData.billets_disponibles}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg bg-white"
-              min="0"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#1A4162]">Flyer de lévénement</label>
-            <input type="file" accept="image/*" onChange={handleFileChange} className="w-full p-2 border rounded-lg bg-white" />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-[#1A4162] text-white py-2 rounded-lg hover:bg-[#2e6da3] hover:text-white transition flex items-center justify-center"
-            disabled={loading}
-          >
-            {loading ? (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 1 && (
               <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Ajout de l'evenement...
+                <div>
+                  <label className="text-gray-700 font-medium">Nom de lévénement</label>
+                  <input type="text" name="titre" value={formData.titre} onChange={handleChange} className="w-full p-3 border rounded-lg" required />
+                </div>
+
+                <div>
+                  <label className="text-gray-700 font-medium">Description</label>
+                  <textarea name="description" value={formData.description} onChange={handleChange} className="w-full p-3 border rounded-lg" required />
+                </div>
+
+                <div>
+                  <label className="text-gray-700 font-medium">Lieu</label>
+                  <input type="text" name="lieu" value={formData.lieu} onChange={handleChange} className="w-full p-3 border rounded-lg" required />
+                </div>
+
+                <button type="button" onClick={() => setStep(2)} className="w-full bg-blue-500 text-white p-3 rounded-lg">
+                  Suivant
+                </button>
               </>
-            ) : (
-              "Ajouter l'événement"
             )}
-          </button>
-        </form>
+
+            {step === 2 && (
+              <>
+                <div>
+                  <label className="text-gray-700 font-medium">Date et heure de début</label>
+                  <input type="datetime-local" name="date_debut" value={formData.date_debut} onChange={handleChange} className="w-full p-3 border rounded-lg" required />
+                </div>
+
+                <div>
+                  <label className="text-gray-700 font-medium">Date et heure de fin</label>
+                  <input type="datetime-local" name="date_fin" value={formData.date_fin} onChange={handleChange} className="w-full p-3 border rounded-lg" required />
+                </div>
+
+                <div className="flex items-center">
+                  <input type="checkbox" name="evenementLibre" checked={formData.evenementLibre} onChange={handleCheckboxChange} className="mr-2" />
+                  <label className="text-gray-700 font-medium">Événement à entrée libre</label>
+                </div>
+
+                {!formData.evenementLibre && (
+                  <div>
+                    <label className="text-gray-700 font-medium">Prix (FCFA)</label>
+                    <input type="number" name="prix" value={formData.prix} onChange={handleChange} className="w-full p-3 border rounded-lg" min="0" required />
+                  </div>
+                )}
+
+                <button type="button" onClick={() => setStep(3)} className="w-full bg-blue-500 text-white p-3 rounded-lg">
+                  Suivant
+                </button>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div {...getRootProps()} className="border-2 border-dashed p-6 rounded-lg text-center cursor-pointer">
+                  <input {...getInputProps()} />
+                  {flyerPreview ? (
+                    <Image src={flyerPreview} alt="Flyer de l'événement" width={200} height={200} className="mx-auto" />
+                  ) : (
+                    <p className="text-gray-700"><Upload className="inline-block w-8 h-8 mr-2" /> Glissez-déposez un flyer ici</p>
+                  )}
+                </div>
+
+                <button type="submit" className="w-full bg-green-500 text-white p-3 rounded-lg flex items-center justify-center" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Création en cours...
+                    </>
+                  ) : (
+                    "Créer l'événement"
+                  )}
+                </button>
+              </>
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );

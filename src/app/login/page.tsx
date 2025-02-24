@@ -46,7 +46,7 @@ export default function LoginPage() {
 
     console.log("Connexion avec :", formData);
     // 🚀 Ajouter ici l'appel API pour l'authentification
-    router.push("/dashboard"); // 🔄 Rediriger après connexion réussie
+    router.push("/interfaces/dashboard"); // 🔄 Rediriger après connexion réussie
   };
 
   return (
@@ -56,11 +56,11 @@ export default function LoginPage() {
           <div className="border-[20px] border-transparent rounded-[20px] bg-white shadow-lg xl:p-10 2xl:p-10 lg:p-10 md:p-10 sm:p-2 m-2">
             {/* Titre de la plateforme */}
             <h1 className="text-center text-4xl font-bold text-gray-800 mb-6">
-              Mboa Event 🎉 <br />
+              Mboa Event  <br />
               <span className="text-xl text-gray-600">Votre plateforme événementielle</span>
             </h1>
 
-            <h2 className="text-center text-3xl font-semibold text-gray-800 mb-6">Log in</h2>
+            <h2 className="text-center text-3xl font-semibold text-gray-800 mb-6">Connectez-vous</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
@@ -125,38 +125,13 @@ export default function LoginPage() {
             <div className="flex flex-col mt-4 items-center text-sm">
               <p className="text-gray-600">
                 Vous navez pas de compte ?{" "}
-                <Link href="/register" className="text-blue-400 hover:underline">
+                <Link href="/inscription" className="text-blue-400 hover:underline">
                   Inscrivez-vous
                 </Link>
               </p>
             </div>
 
-            {/* Authentification avec réseaux sociaux */}
-            <div className="flex items-center justify-center mt-5 flex-wrap">
-              {["google", "linkedin", "github", "facebook", "twitter", "apple"].map((provider) => (
-                <button key={provider} className="hover:scale-105 ease-in-out duration-300 shadow-lg p-2 rounded-lg m-1">
-                  <img
-                    className="max-w-[25px]"
-                    src={`https://ucarecdn.com/${provider}`}
-                    alt={provider}
-                  />
-                </button>
-              ))}
-            </div>
-
-            {/* Conditions et politique de confidentialité */}
-            <div className="text-gray-500 flex text-center flex-col mt-4 text-sm">
-              <p>
-                En vous connectant, vous acceptez nos{" "}
-                <Link href="#" className="text-blue-400 hover:underline">
-                  Conditions
-                </Link>{" "}
-                et notre{" "}
-                <Link href="#" className="text-blue-400 hover:underline">
-                  Politique de confidentialité
-                </Link>.
-              </p>
-            </div>
+        
           </div>
         </div>
       </div>

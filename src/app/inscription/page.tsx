@@ -24,75 +24,42 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  // Liste des domaines d'e-mails temporaires interdits
-  const blockedDomains = ["mailinator.com", "tempmail.com", "guerrillamail.com", "10minutemail.com"];
-
-  const validateEmail = (email: string) => {
-    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const emailDomain = email.split("@")[1];
-
-    if (!emailPattern.test(email)) {
-      return "Veuillez entrer une adresse email valide.";
-    }
-    if (emailDomain && blockedDomains.includes(emailDomain)) {
-      return "Les emails temporaires ne sont pas autorisés.";
-    }
-    return "";
-  };
-
-  const validatePhone = (phone: string) => {
-    const phonePattern = /^\+2376[0-9]{8}$/;
-    return phonePattern.test(phone) ? "" : "Le numéro doit être au format +2376XXXXXXXX.";
-  };
-
-  const validatePassword = (password: string) => {
-    if (password.length < 8) return "Le mot de passe doit contenir au moins 8 caractères.";
-    if (!/[A-Z]/.test(password)) return "Le mot de passe doit contenir au moins une majuscule.";
-    if (!/[a-z]/.test(password)) return "Le mot de passe doit contenir au moins une minuscule.";
-    if (!/[0-9]/.test(password)) return "Le mot de passe doit contenir au moins un chiffre.";
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Le mot de passe doit contenir un caractère spécial.";
-    return "";
-  };
-
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-
-    // Validation en direct
-    if (name === "email") setErrors({ ...errors, email: validateEmail(value) });
-    if (name === "phone") setErrors({ ...errors, phone: validatePhone(value) });
-    if (name === "password") setErrors({ ...errors, password: validatePassword(value) });
-    if (name === "confirmPassword") {
-      setErrors({
-        ...errors,
-        confirmPassword: value !== formData.password ? "Les mots de passe ne correspondent pas." : "",
-      });
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMessage("");
 
-    // Vérification finale des erreurs
-    const emailError = validateEmail(formData.email);
-    const phoneError = validatePhone(formData.phone);
-    const passwordError = validatePassword(formData.password);
-    const confirmPasswordError = formData.password !== formData.confirmPassword ? "Les mots de passe ne correspondent pas." : "";
+    
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("Les mots de passe ne correspondent pas.");
+      setLoading(false);
+      return;
+    }
 
-    setErrors({ email: emailError, phone: phoneError, password: passwordError, confirmPassword: confirmPasswordError });
+    try {
+      const response = await fetch("http://localhost:8000/api/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    if (emailError || phoneError || passwordError || confirmPasswordError) return;
-
-    console.log("Inscription avec :", formData);
-    // 🚀 Ajouter ici l'appel API pour l'inscription
-    router.push("/login"); // 🔄 Redirige vers la page de connexion après inscription
+      if (!response.ok) {
+        const data = await response.json();
+        setErrorMessage(data.error || "Erreur lors de l'inscription.");
+      } else {
+        router.push("/login");
+      }
+    } catch (error) {
+      setErrorMessage("Impossible de se connecter au serveur.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -105,7 +72,9 @@ export default function RegisterPage() {
               <span className="text-xl text-gray-600">Votre plateforme événementielle</span>
             </h1>
 
-            <h2 className="text-center text-3xl font-semibold text-gray-800 mb-6">Sign Up</h2>
+            <h2 className="text-center text-3xl font-semibold text-gray-800 mb-6">Inscrivez-vous</h2>
+
+            {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Nom */}
@@ -118,14 +87,12 @@ export default function RegisterPage() {
               <div>
                 <label htmlFor="email" className="mb-2 text-gray-700 text-lg">Email</label>
                 <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" placeholder="Email" required />
-                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
               </div>
 
               {/* Téléphone */}
               <div>
                 <label htmlFor="phone" className="mb-2 text-gray-700 text-lg">Numéro de téléphone</label>
                 <input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" required />
-                {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
               </div>
 
               {/* Mot de passe */}
@@ -135,11 +102,36 @@ export default function RegisterPage() {
                   <input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full pr-10" required />
                   <button type="button" className="absolute inset-y-0 right-3 flex items-center" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
                 </div>
-                {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
               </div>
 
-              <button type="submit" className="bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg mt-6 p-2 text-white rounded-lg w-full">Sign Up</button>
+              {/* Confirmation mot de passe */}
+              <div>
+                <label htmlFor="confirmPassword" className="mb-2 text-gray-700 text-lg">Confirmer le mot de passe</label>
+                <div className="relative">
+                  <input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full pr-10" required />
+                  <button type="button" className="absolute inset-y-0 right-3 flex items-center" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
+                </div>
+              </div>
+
+              {/* Bouton d'inscription */}
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg mt-6 p-2 text-white rounded-lg w-full hover:scale-105 transition duration-300 ease-in-out"
+                disabled={loading}
+              >
+                {loading ? "Inscription..." : "S'inscrire"}
+              </button>
             </form>
+
+            {/* Lien vers la connexion */}
+            <div className="flex flex-col mt-4 items-center text-sm">
+              <p className="text-gray-600">
+                Vous avez déjà un compte ?{" "}
+                <Link href="/login" className="text-blue-400 hover:underline">
+                  Se connecter
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
