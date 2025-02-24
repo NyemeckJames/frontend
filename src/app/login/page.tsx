@@ -1,174 +1,164 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Poppins } from "next/font/google";
+import { Eye, EyeOff } from "lucide-react"; // 🔥 Icônes pour afficher/cacher le mot de passe
 
-import { useToast } from "@/hooks/use-toast";
-
-interface FormValues {
-  email: string;
-  password: string;
-}
-
-const decodeBase64 = (base64: string) => {
-  try {
-    return JSON.parse(atob(base64));
-  } catch (error) {
-    console.error("Error decoding base64:", error);
-    return null;
-  }
-};
-
-const decodeToken = (token: string | null) => {
-  if (!token) {
-    return null;
-  }
-  const parts = token.split(".");
-  if (parts.length !== 3) {
-    return null;
-  }
-  return decodeBase64(parts[1]); // Payload
-};
-
-const schema = yup.object().shape({
-  email: yup.string().email("Email invalide").required("L'email est requis"),
-  password: yup.string().min(6, "Minimum 6 caractères").required("Mot de passe requis"),
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-export default function Login() {
-  const [loading, setLoading] = useState(false);
+export default function LoginPage() {
   const router = useRouter();
-  const {toast} = useToast();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState(""); // Gestion des erreurs email
 
-  // 🛠️ Vérification automatique du token lors du chargement du composant
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const payload = decodeToken(token);
-      const expiryTime = payload?.exp ? payload.exp * 1000 : 0;
-      const currentTime = Date.now();
+  // Liste des domaines d'e-mails temporaires à bloquer
+  const blockedDomains = ["mailinator.com", "tempmail.com", "guerrillamail.com", "10minutemail.com"];
 
-      if (expiryTime > currentTime) {
-        // Token valide, récupérer le rôle
-        const role = localStorage.getItem("roles")?.replace(/"/g, ""); // Nettoyer le rôle
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
 
-        if (role === "ADMINISTRATEUR" || role === "ORGANISATEUR") {
-          router.replace("/interfaces/new-event/");
-        } else if (role === "PARTICIPANT") {
-          router.replace("/interfaces/participant/event-list/");
-        }
+    if (name === "email") {
+      // Vérifie si l'email contient un domaine interdit
+      const emailDomain = value.split("@")[1];
+      if (emailDomain && blockedDomains.includes(emailDomain)) {
+        setEmailError("Les emails temporaires ne sont pas autorisés.");
       } else {
-        console.log("Token expiré");
-        localStorage.clear(); // Supprime le token expiré
+        setEmailError("");
       }
     }
-  }, [router]); // S'exécute une seule fois au chargement
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: yupResolver(schema),
-  });
+    setFormData({ ...formData, [name]: value });
+  };
 
-  const onSubmit = async (data: FormValues) => {
-    setLoading(true);
-    try {
-      const response = await fetch("http://localhost:8000/users/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-      if (response.ok) {
-        const data = await response.json();
-        const infotoken = decodeToken(data.access);
-        const expiryTime = infotoken.exp * 1000;
-
-        localStorage.setItem("tokenExpiry", expiryTime.toString());
-        localStorage.setItem("token", data.access);
-        localStorage.setItem("roles", JSON.stringify(data.user.role));
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        if (data.user.role === "ADMINISTRATEUR" || data.user.role === "ORGANISATEUR") {
-          router.replace("/interfaces/new-event/");
-        } else if (data.user.role === "PARTICIPANT") {
-          router.replace("/interfaces/participant/event-list/");
-        }
-      } else {
-        toast({
-          description : "Erreur lors de l'envoi de la notification.",
-          variant : "destructive",
-          duration: 2000,
-        })
-      }
-    } catch (error) {
-      console.error("Erreur lors de la connexion", error);
+    if (emailError) {
+      alert("Veuillez entrer une adresse email valide.");
+      return;
     }
-    finally{
-      setLoading(false);
-    }
+
+    console.log("Connexion avec :", formData);
+    // 🚀 Ajouter ici l'appel API pour l'authentification
+    router.push("/dashboard"); // 🔄 Rediriger après connexion réussie
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-[#1a4162]">
-      <div className="bg-white p-6 rounded-lg shadow-md w-96 border-2 border-[#1a4162]">
-        <h1 className="text-2xl font-bold mb-4 text-center text-[#1a4162]">Connexion</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#1a4162]">Email</label>
-            <input
-              {...register("email")}
-              type="email"
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:border-[#1a4162] bg-white"
-              placeholder="Entrez votre email"
-            />
-            <p className="text-red-500 text-sm">{errors.email?.message}</p>
-          </div>
+    <div className={`${poppins.className} flex items-center justify-center min-h-screen bg-gray-900`}>
+      <div className="grid gap-8">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-[26px] m-4">
+          <div className="border-[20px] border-transparent rounded-[20px] bg-white shadow-lg xl:p-10 2xl:p-10 lg:p-10 md:p-10 sm:p-2 m-2">
+            {/* Titre de la plateforme */}
+            <h1 className="text-center text-4xl font-bold text-gray-800 mb-6">
+              Mboa Event 🎉 <br />
+              <span className="text-xl text-gray-600">Votre plateforme événementielle</span>
+            </h1>
 
-          <div>
-            <label className="block text-sm font-medium text-[#1a4162]">Mot de passe</label>
-            <input
-              {...register("password")}
-              type="password"
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:border-[#1a4162] bg-white"
-              placeholder="Entrez votre mot de passe"
-            />
-            <p className="text-red-500 text-sm">{errors.password?.message}</p>
-          </div>
+            <h2 className="text-center text-3xl font-semibold text-gray-800 mb-6">Log in</h2>
 
-          <div className="mt-4 text-center">
-            <p>Pas encore inscrit ?</p>
-            <Link href="/inscription" className="text-[#1a4162] hover:text-blue-500">
-              S'inscrire
-            </Link>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email */}
+              <div>
+                <label htmlFor="email" className="mb-2 text-gray-700 text-lg">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="border p-3 shadow-md border-gray-300 rounded-lg w-full"
+                  placeholder="Email"
+                  required
+                />
+                {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+              </div>
 
-          <button
-            type="submit"
-            className="w-full bg-[#1a4162] text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Connexion...
-              </>
-            ) : (
-              "Se connecter"
-            )}
-          </button>
-        </form>
+              {/* Mot de passe avec icône "œil" */}
+              <div>
+                <label htmlFor="password" className="mb-2 text-gray-700 text-lg">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="border p-3 shadow-md border-gray-300 rounded-lg w-full pr-10"
+                    placeholder="Mot de passe"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Mot de passe oublié */}
+              <Link href="#" className="text-blue-400 text-sm hover:underline">
+                Mot de passe oublié ?
+              </Link>
+
+              {/* Bouton de connexion */}
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg mt-6 p-2 text-white rounded-lg w-full hover:scale-105 transition duration-300 ease-in-out"
+              >
+                Se connecter
+              </button>
+            </form>
+
+            {/* Redirection vers Sign Up */}
+            <div className="flex flex-col mt-4 items-center text-sm">
+              <p className="text-gray-600">
+                Vous navez pas de compte ?{" "}
+                <Link href="/register" className="text-blue-400 hover:underline">
+                  Inscrivez-vous
+                </Link>
+              </p>
+            </div>
+
+            {/* Authentification avec réseaux sociaux */}
+            <div className="flex items-center justify-center mt-5 flex-wrap">
+              {["google", "linkedin", "github", "facebook", "twitter", "apple"].map((provider) => (
+                <button key={provider} className="hover:scale-105 ease-in-out duration-300 shadow-lg p-2 rounded-lg m-1">
+                  <img
+                    className="max-w-[25px]"
+                    src={`https://ucarecdn.com/${provider}`}
+                    alt={provider}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Conditions et politique de confidentialité */}
+            <div className="text-gray-500 flex text-center flex-col mt-4 text-sm">
+              <p>
+                En vous connectant, vous acceptez nos{" "}
+                <Link href="#" className="text-blue-400 hover:underline">
+                  Conditions
+                </Link>{" "}
+                et notre{" "}
+                <Link href="#" className="text-blue-400 hover:underline">
+                  Politique de confidentialité
+                </Link>.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
