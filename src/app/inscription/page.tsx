@@ -63,9 +63,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className={`${poppins.className} flex items-center justify-center min-h-screen bg-gray-900`}>
-      <div className="grid gap-8">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-[26px] m-4">
+    <div className={`${poppins.className} flex items-center justify-center  bg-gray-900`}>
+      <div className="grid">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-[26px] ">
           <div className="border-[20px] border-transparent rounded-[20px] bg-white shadow-lg xl:p-10 2xl:p-10 lg:p-10 md:p-10 sm:p-2 m-2">
             <h1 className="text-center text-4xl font-bold text-gray-800 mb-6">
               Mboa Event <br />
@@ -76,7 +76,7 @@ export default function RegisterPage() {
 
             {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="">
               {/* Nom */}
               <div>
                 <label htmlFor="name" className="mb-2 text-gray-700 text-lg">Nom complet</label>
