@@ -142,7 +142,7 @@ const page = () => {
             <div className="w-full h-64 rounded-lg overflow-hidden shadow-md">
             <iframe
                 className="w-full h-full"
-                src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_API_KEY}&q=Yaoundé,Cameroun`}
+                src={`https://www.google.com/maps/embed/v1/place?key=FFDFD&q=Yaoundé,Cameroun`}
                 allowFullScreen
                 loading="lazy"
             />
