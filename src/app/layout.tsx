@@ -1,3 +1,5 @@
+/* eslint-disable react/no-children-prop */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -6,6 +8,8 @@ import { Providers } from "@/store/Providers";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import ClientLayout from "@/components/ClientProgressBar";
+import { useEffect } from "react";
+import ProgressBar from "@/components/ClientProgressBar";
 
 export const poppins = Inter({
   subsets: ["latin"],
@@ -42,6 +46,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${poppins.variable} font-sans`}>
+      <ProgressBar children={undefined} /> 
         <Providers>
           <ClientLayout>{children}</ClientLayout>
         </Providers>
