@@ -26,16 +26,37 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(""); 
+  const [successMessage, setSuccessMessage] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+
+  // ✅ Validation stricte du numéro de téléphone au Cameroun
+  const validatePhone = (phone: string) => {
+    const phonePattern = /^\+237(69|68|65|67|62)[0-9]{6}$/; // 📌 Autorise uniquement les préfixes valides
+    return phonePattern.test(phone) ? "" : "Le numéro doit commencer par +23769, +23768, +23765, +23767 ou +23762 et contenir 9 chiffres.";
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "phone") {
+      setPhoneError(validatePhone(value));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
 
-    
+    // 🔴 Vérifier si le numéro est valide avant soumission
+    if (phoneError) {
+      setErrorMessage("Corrigez les erreurs avant de continuer.");
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage("Les mots de passe ne correspondent pas.");
       setLoading(false);
@@ -49,11 +70,11 @@ export default function RegisterPage() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         setErrorMessage(data.error || "Erreur lors de l'inscription.");
       } else {
-        router.push("/login");
+        setSuccessMessage("Inscription réussie ! Vérifiez votre email pour activer votre compte.");
       }
     } catch (error) {
       setErrorMessage("Impossible de se connecter au serveur.");
@@ -93,6 +114,7 @@ export default function RegisterPage() {
               <div>
                 <label htmlFor="phone" className="mb-2 text-gray-700 text-lg">Numéro de téléphone</label>
                 <input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" required />
+                {phoneError && <p className="text-red-500 text-sm">{phoneError}</p>}
               </div>
 
               {/* Mot de passe */}
@@ -122,6 +144,8 @@ export default function RegisterPage() {
                 {loading ? "Inscription..." : "S'inscrire"}
               </button>
             </form>
+
+            {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
 
             {/* Lien vers la connexion */}
             <div className="flex flex-col mt-4 items-center text-sm">
