@@ -1,0 +1,48 @@
+/* NewLocation.module.css */
+.container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.formLocation {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.formLocation input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.formRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.saveButton {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background-color: #d14233;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.header h2 {
+  font-size: 13px;
+  font-family: sans-serif;
+}
