@@ -1,33 +1,44 @@
-// app/(auth)/forgot/page.tsx
-
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import Link from 'next/link'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 export default function ForgotPage() {
- return (
-  <Card className='mx-auto max-w-sm border-0 shadow-none mt-4 sm:mt-12 sm:border sm:shadow-sm md:mt-20 lg:mt-24 xl:mt-28'>
-   <CardHeader>
-    <CardTitle className='text-2xl'>Forgot Password</CardTitle>
-    <CardDescription>Enter your email below to reset your password</CardDescription>
-   </CardHeader>
-   <CardContent>
-    <div className='grid gap-4'>
-     <div className='grid gap-2'>
-      <Label htmlFor='email'>Email</Label>
-      <Input id='email' name='email' placeholder='m@example.com' />
-     </div>
-     <Button>Send verification</Button>
+  return (
+    <div className='min-h-screen flex items-center justify-center bg-gray-900 p-6'>
+      <Card className='w-full max-w-md bg-white shadow-lg rounded-2xl p-10'>
+        <CardHeader className='text-center'>
+        <h1 className="text-center text-4xl font-bold text-gray-800 mb-6">Mboa Event</h1>
+        <h2 className="text-center text-2xl font-bold text-gray-800 mb-2">Mot de passe oublié</h2>
+          <CardDescription className='text-gray-600 mt-2'>
+            Entrez votre adresse email pour recevoir un lien de réinitialisation.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className='space-y-4'>
+            <div>
+              <Label htmlFor='email' className='text-lg text-gray-700'>Email</Label>
+              <Input 
+                id='email' 
+                name='email' 
+                type='email' 
+                placeholder='m@example.com' 
+                className='border p-3 shadow-md border-gray-300 rounded-lg w-full text-lg' 
+                required 
+              />
+            </div>
+            <Button className='w-full bg-[#1a4162] text-white text-lg p-3 rounded-lg shadow-md hover:scale-105 transition duration-300 ease-in-out'>
+              Envoyer un email de vérification
+            </Button>
+          </form>
+          <div className='mt-4 text-center text-sm text-gray-600'>
+            Se souvenir de mon mot de passe ?{' '}
+            <Link href='/login' className='text-blue-500 underline'>Se connecter</Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-    <div className='mt-4 text-center text-sm'>
-     Remember your password?{' '}
-     <Link href='/login' className='underline'>
-      Sign in
-     </Link>
-    </div>
-   </CardContent>
-  </Card>
- )
+  );
 }

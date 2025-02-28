@@ -1,4 +1,6 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client"
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -116,7 +118,7 @@ export default function LoginPage() {
             {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
 
             {/* Mot de passe oublié */}
-            <Link href="#" className="text-blue-400 text-sm hover:underline block text-right">
+            <Link href="/forgot" className="text-blue-400 text-sm hover:underline block text-right">
               Mot de passe oublié ?
             </Link>
 
@@ -132,7 +134,7 @@ export default function LoginPage() {
 
           {/* Redirection vers Sign Up */}
           <div className="mt-4 text-center text-sm text-gray-600">
-            Vous n'avez pas de compte ?{" "}
+            Vous navez pas de compte ? {" "}
             <Link href="/inscription" className="text-blue-400 hover:underline">
               Inscrivez-vous
             </Link>
