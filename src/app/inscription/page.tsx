@@ -15,10 +15,10 @@ const poppins = Poppins({
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: "",
+    nom: "",
     email: "",
-    phone: "+237", // 📌 Préfixe Cameroun
-    password: "",
+    telephone: "+237", // 📌 Préfixe Cameroun
+    mot_de_passe: "",
     confirmPassword: "",
   });
 
@@ -31,15 +31,15 @@ export default function RegisterPage() {
 
   // ✅ Validation stricte du numéro de téléphone au Cameroun
   const validatePhone = (phone: string) => {
-    const phonePattern = /^\+237(69|68|65|67|62)[0-9]{6}$/; // 📌 Autorise uniquement les préfixes valides
-    return phonePattern.test(phone) ? "" : "Le numéro doit commencer par +23769, +23768, +23765, +23767 ou +23762 et contenir 9 chiffres.";
+    const phonePattern = /^\+237(69|68|65|67|62)[0-9]{7}$/; // 📌 Autorise uniquement les préfixes valides
+    return phonePattern.test(phone) ? "" : "Numéro invalide";
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    if (name === "phone") {
+    if (name === "telephone") {
       setPhoneError(validatePhone(value));
     }
   };
@@ -57,14 +57,14 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.mot_de_passe !== formData.confirmPassword) {
       setErrorMessage("Les mots de passe ne correspondent pas.");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:8000/api/register/", {
+      const response = await fetch("http://localhost:8000/users/signup/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -100,8 +100,8 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="">
               {/* Nom */}
               <div>
-                <label htmlFor="name" className="mb-2 text-gray-700 text-lg">Nom complet</label>
-                <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" placeholder="Votre nom" required />
+                <label htmlFor="nom" className="mb-2 text-gray-700 text-lg">Nom complet</label>
+                <input id="nom" name="nom" type="text" value={formData.nom} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" placeholder="Votre nom" required />
               </div>
 
               {/* Email */}
@@ -112,16 +112,16 @@ export default function RegisterPage() {
 
               {/* Téléphone */}
               <div>
-                <label htmlFor="phone" className="mb-2 text-gray-700 text-lg">Numéro de téléphone</label>
-                <input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" required />
+                <label htmlFor="telephone" className="mb-2 text-gray-700 text-lg">Numéro de téléphone</label>
+                <input id="telephone" name="telephone" type="tel" value={formData.telephone} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full" required />
                 {phoneError && <p className="text-red-500 text-sm">{phoneError}</p>}
               </div>
 
               {/* Mot de passe */}
               <div>
-                <label htmlFor="password" className="mb-2 text-gray-700 text-lg">Mot de passe</label>
+                <label htmlFor="mot_de_passe" className="mb-2 text-gray-700 text-lg">Mot de passe</label>
                 <div className="relative">
-                  <input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full pr-10" required />
+                  <input id="mot_de_passe" name="mot_de_passe" type={showPassword ? "text" : "password"} value={formData.mot_de_passe} onChange={handleChange} className="border p-3 shadow-md border-gray-300 rounded-lg w-full pr-10" required />
                   <button type="button" className="absolute inset-y-0 right-3 flex items-center" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
                 </div>
               </div>

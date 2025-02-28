@@ -44,6 +44,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet"
         />
+        
       </head>
       <body className={`${poppins.variable} font-sans`}>
       <ProgressBar children={undefined} /> 

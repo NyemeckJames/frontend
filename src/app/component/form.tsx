@@ -12,25 +12,61 @@ import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { formSteps } from "@/lib/eventschema";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import "react-datepicker/dist/react-datepicker.css";
+import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import DeliveryLocationModal from "./DeliveryLocationModal";
+
 
 type Inputs = z.infer<typeof eventSchema>;
 
 const steps = formSteps;
 
 export default function Form() {
+  const [formData, setFormData] = useState({});
   const [previousStep, setPreviousStep] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [minTime, setMinTime] = useState("");
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ]);
+
   const [preview, setPreview] = useState<string | null>(null);
-  const [previews, setPreviews] = useState<(string | null)[]>([]);  
+  const [previews, setPreviews] = useState<(string | null)[]>([]);
   const delta = currentStep - previousStep;
-  const { control, setValue } = useFormContext();
+  interface Location {
+    latitude: number;
+    longitude: number;
+  }
+
+  interface FormData {
+    additional_contact_name: string;
+    additional_contact_phone: string;
+    delivery_track_id: string;
+    location: Location;
+    location_title: string;
+    name: string;
+  }
+
+  const [formData1, setFormData1] = useState<FormData>({
+    additional_contact_name: "",
+    additional_contact_phone: "",
+    delivery_track_id: "",
+    location: { latitude: 0, longitude: 0 },
+    location_title: "",
+    name: "",
+  });
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    trigger,
+    getValues,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<Inputs>({
+    defaultValues: { tickets: [] },
+    resolver: zodResolver(eventSchema),
+  });
   const { fields, append, remove } = useFieldArray({
     control,
     name: "speakers",
@@ -51,19 +87,51 @@ export default function Form() {
     control,
     name: "gallery",
   });
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    trigger,
-    getValues,
-    formState: { errors },
-  } = useForm<Inputs>({
-    resolver: zodResolver(eventSchema),
+  const { 
+    fields:ticketsFields, 
+    append:appendTickets, 
+    remove:removeTickets, 
+  } = useFieldArray({
+    control,
+    name: "tickets",
   });
-  const tagsValue = watch("tags") || ""; // Récupérer la valeur actuelle du champ
+
+  const [previewVideo, setPreviewVideo] = useState<string | null>(null);
+  const {toast} = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => {
+    // Réinitialisation des valeurs de formData1 à chaque ouverture de la modal
+    setFormData1({
+      additional_contact_name: "",
+      additional_contact_phone: "",
+      delivery_track_id: "",
+      location: { latitude: 0, longitude: 0 },
+      location_title: "",
+      name: "",
+    });
+    setIsModalOpen(true);
+  }
+  const closeModal = () =>{
+    setIsModalOpen(false);
+    console.log("Formdata 1 : ", formData1)
+  }
+  const saveAddress = ()=>{
+    // Mettre à jour les adresses en fonction des données reçues du modal
+  const newAddress = {
+    additional_contact_name: formData1.additional_contact_name,
+    additional_contact_phone: formData1.additional_contact_phone,
+    delivery_track_id: formData1.delivery_track_id,
+    location: formData1.location,
+    location_title: formData1.location_title,
+    name: formData1.name,
+  };
+
+  appendAdress(newAddress); // Ajouter l'adresse au tableau
+  console.log('Nouvelles données d\'adresse : ', newAddress);
+    closeModal()
+  }
+
   const imageFile = watch("coverImage");
   useEffect(() => {
     if (imageFile && imageFile.length > 0) {
@@ -75,30 +143,241 @@ export default function Form() {
       return () => URL.revokeObjectURL(previewUrl);
     }
   }, [imageFile]);
-  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue("tags", e.target.value);
-  };
+  
   useEffect(() => {
     const files = watch("gallery");
     if (files) {
-      const previewUrls = files.map((fileList) => 
-        fileList && fileList.length > 0 ? URL.createObjectURL(fileList[0]) : null
+      const previewUrls = files.map((fileList) =>
+        fileList && fileList.length > 0
+          ? URL.createObjectURL(fileList[0])
+          : null
       );
       setPreviews(previewUrls);
-      
+
       // Nettoyer les URLs pour éviter les fuites mémoire
-      return () => previewUrls.forEach((url) => url && URL.revokeObjectURL(url));
+      return () =>
+        previewUrls.forEach((url) => url && URL.revokeObjectURL(url));
     }
   }, [watch("gallery")]);
+  
+  const hashtags = watch("tags") || [];
 
   const processForm: SubmitHandler<Inputs> = (data) => {
     console.log(data);
     reset();
   };
-  const onSubmit = (data: any) => {
-    const values = getValues()
-    console.log("Données du formulaire :", values);
+  const createEvent = async (eventData: any) => {
+    const formData = new FormData();
+  
+    // Ajout des champs texte
+    Object.entries(eventData).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          if (typeof item === "object") {
+            Object.entries(item).forEach(([subKey, subValue]) => {
+              formData.append(`${key}[${index}][${subKey}]`, subValue as string);
+            });
+          } else {
+            formData.append(`${key}[${index}]`, item as string);
+          }
+        });
+      } else {
+        formData.append(key, value as string);
+      }
+    });
+  
+    // Ajout des fichiers (images, vidéo)
+    if (eventData.coverImage) {
+      formData.append("coverImage", eventData.coverImage[0]);
+    }
+    if (eventData.promoVideo) {
+      formData.append("promoVideo", eventData.promoVideo[0]);
+    }
+    if (eventData.gallery) {
+      eventData.gallery.forEach((file: File, index: number) => {
+        formData.append(`gallery[${index}]`, file);
+      });
+    }
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/event/create/", {
+        method: "POST",
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erreur lors de la création de l'événement");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Erreur:", error);
+      return null;
+    }
   };
+  
+  /*const onSubmitPersonnal = async () => {
+    const values = getValues();
+    console.log("Données du formulaire :", values);
+    const response = await createEvent(values);
+  
+    if (response) {
+      console.log("Événement créé avec succès :", response);
+    } else {
+      console.error("Erreur lors de la création de l'événement.");
+    }
+  };*/
+  /*const onSubmitPersonnal = async () => {
+    const values = getValues();
+    console.log("Values du formulaire : ", values);
+    const formData = new FormData();
+
+    // Ajout des champs texte
+    Object.entries(values).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            value.forEach((item, index) => {
+                if (typeof item === "object" && item !== null) {
+                    Object.entries(item).forEach(([subKey, subValue]) => {
+                        if (subKey === "location") {
+                            // Envoyer `location` sous forme de JSON valide
+                            formData.append(`${key}[${index}][${subKey}]`, JSON.stringify(subValue));
+                        } else {
+                            formData.append(`${key}[${index}][${subKey}]`, subValue as string);
+                        }
+                    });
+                } else {
+                    formData.append(`${key}[${index}]`, value as unknown as string);
+                }
+            });
+        } else {
+            formData.append(key, value as string);
+        }
+    });
+
+    // Gestion des fichiers
+    if (values.coverImage && values.coverImage.length > 0) {
+        formData.append("coverImage", values.coverImage[0]); // ✅ Prend le premier fichier
+    }
+
+    if (values.promoVideo && values.promoVideo.length > 0) {
+        formData.append("promoVideo", values.promoVideo[0]); // ✅ Prend le premier fichier
+    }
+
+    if (values.gallery && values.gallery.length > 0) {
+        values.gallery.forEach((fileList: FileList, index: number) => {
+            Array.from(fileList).forEach((file, fileIndex) => {
+                formData.append(`gallery[${index}][${fileIndex}]`, file); // ✅ Ajoute chaque fichier individuellement
+            });
+        });
+    }
+
+    if (values.speakers && values.speakers.length > 0) {
+        values.speakers.forEach((speaker, index) => {
+            Object.entries(speaker).forEach(([subKey, subValue]) => {
+                if (subKey === "photo" && subValue.length > 0) {
+                    formData.append(`speakers[${index}][photo]`, subValue[0]); // ✅ Prend le premier fichier
+                } else {
+                    formData.append(`speakers[${index}][${subKey}]`, subValue as string); // ✅ Enregistre chaque champ
+                }
+            });
+        });
+    }
+
+    // Envoi de la requête
+    try {
+        const response = await fetch("http://127.0.0.1:8000/event/create/", {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error("Erreur lors de la création de l'événement");
+        }
+
+        const data = await response.json();
+        console.log("Événement créé avec succès :", data);
+    } catch (error) {
+        console.error("Erreur:", error);
+    }
+};*/
+
+const onSubmitPersonnal = async () => {
+  const values = getValues();
+  console.log("Values du formulaire : ", values);
+  const formData = new FormData();
+
+  // Ajout des champs texte sans doublons
+  Object.entries(values).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+          const uniqueValues = [...new Set(value)]; // 🔥 Supprime les doublons
+
+          uniqueValues.forEach((item, index) => {
+              if (typeof item === "object" && item !== null) {
+                  Object.entries(item).forEach(([subKey, subValue]) => {
+                      if (subKey === "location") {
+                          formData.append(`${key}[${index}][${subKey}]`, JSON.stringify(subValue));
+                      } else {
+                          formData.append(`${key}[${index}][${subKey}]`, subValue as string);
+                      }
+                  });
+              } else {
+                  formData.append(`${key}[${index}]`, item as string);
+              }
+          });
+      } else {
+          formData.append(key, value as string);
+      }
+  });
+
+  // Gestion des fichiers sans doublons
+  if (values.coverImage?.length > 0) {
+      formData.append("coverImage", values.coverImage[0]); // ✅ Prend le premier fichier
+  }
+
+  if (values.promoVideo?.length > 0) {
+      formData.append("promoVideo", values.promoVideo[0]); // ✅ Prend le premier fichier
+  }
+
+  if (values.gallery?.length > 0) {
+      values.gallery.forEach((fileList: FileList, index: number) => {
+          const uniqueFiles = Array.from(new Set(fileList)); // 🔥 Supprime les doublons
+          uniqueFiles.forEach((file, fileIndex) => {
+              formData.append(`gallery[${index}][${fileIndex}]`, file);
+          });
+      });
+  }
+
+  if (values.speakers?.length && values.speakers?.length > 0) {
+      values.speakers.forEach((speaker, index) => {
+          Object.entries(speaker).forEach(([subKey, subValue]) => {
+              if (subKey === "photo" && subValue.length > 0) {
+                  formData.append(`speakers[${index}][photo]`, subValue[0]); // ✅ Prend le premier fichier
+              } else {
+                  formData.append(`speakers[${index}][${subKey}]`, subValue as string);
+              }
+          });
+      });
+  }
+
+  // Envoi de la requête
+  try {
+      const response = await fetch("http://127.0.0.1:8000/event/create/", {
+          method: "POST",
+          body: formData,
+      });
+
+      if (!response.ok) {
+          throw new Error("Erreur lors de la création de l'événement");
+      }
+
+      const data = await response.json();
+      console.log("Événement créé avec succès :", data);
+  } catch (error) {
+      console.error("Erreur:", error);
+  }
+};
+
+  
   useEffect(() => {
     // Obtenir l'heure actuelle en format "HH:MM"
     const now = new Date();
@@ -108,24 +387,112 @@ export default function Form() {
   }, []);
 
   type FieldName = keyof Inputs;
-
+  const validateStep4 = () => {
+    const values = getValues();
+    const ticketOpenDate = values.ticketOpenDate;
+    const ticketCloseDate = values.ticketCloseDate;
+    const tickets = values.tickets || [];
+    const startDate = values.startDateTime;
+    const capacityMax = values.capacity
+    const totalTickets = tickets.reduce((sum, t) => sum + (t.quantity || 0), 0);
+  
+    
+    if (ticketOpenDate && new Date(ticketOpenDate) > new Date(startDate)) {
+      toast({
+        description: "La date d'ouverture des ventes ne peut pas être après la date de début de l'événement !",
+        variant: "warning",
+        duration: 3000,
+      });
+      return false;
+    }
+    if (ticketCloseDate && new Date(ticketCloseDate) > new Date(startDate)) {
+      toast({
+        description: "La date de fermeture des ventes ne peut pas être après la date de début de l'événement !",
+        variant: "warning",
+        duration: 3000,
+      });
+      return false
+    }
+  
+    
+  
+    if (ticketOpenDate &&  ticketCloseDate && ticketCloseDate < ticketOpenDate) {
+      toast({ description: "La date de fermeture doit être après la date d'ouverture !", variant: "warning", duration: 3000 });
+      return false;
+    }
+    if (totalTickets > capacityMax) {
+      toast({
+        description: "Le nombre total de billets ne peut pas dépasser la capacité maximale !",
+        variant: "warning",
+        duration: 3000,
+      });
+      return false;
+    }
+      // Complétion automatique des billets gratuits si nécessaire
+    if (totalTickets < capacityMax && tickets.length > 0) {
+      tickets.push({ name: "Billet gratuit", price: 0, quantity: capacityMax - totalTickets });
+    }
+  
+    return true;
+  };
   const next = async () => {
     const fields = steps[currentStep].fields;
     
-    const output = await trigger(fields as unknown as FieldName[], { shouldFocus: true });
-    console.log("Output : ", output);
+    const output = await trigger(fields as unknown as FieldName[], {
+      shouldFocus: true,
+    });
+    const step4Validate = validateStep4();
+    if (!step4Validate) return;
+    
     if (!output) return;
-    // Afficher les valeurs du formulaire à chaque étape
-    console.log("Données du formulaire à l'étape", currentStep + 1, watch());
-
+  
+    // Récupération des valeurs
+    const values = getValues();
+    const startDate = values.startDateTime ? new Date(values.startDateTime) : null;
+    const endDate = values.endDateTime ? new Date(values.endDateTime) : null;
+    const now = new Date();
+    
+  
+    // Vérifications et alertes
+    if (startDate && isNaN(startDate.getTime())) {
+      toast({
+        description : "La date de début requise  !",
+        variant : "warning",
+        duration: 3000,
+      })
+      return;
+    }
+    if (startDate && startDate < now) {
+      toast({
+        description : "La date de début ne peut pas être dans le passé  !",
+        variant : "warning",
+        duration: 3000,
+      })
+      return;
+    }
+  
+    if (startDate && endDate && endDate < startDate) {
+      toast({
+        description : "La date de fin ne peut pas être avant la date de début !",
+        variant : "warning",
+        duration: 3000,
+      })
+      
+      return;
+    }
+    setFormData((prev) => ({ ...prev, ...getValues() }));
+    console.log(
+      "Données du formulaire à l'étape",
+      currentStep + 1,
+      getValues()
+    );
+  
     if (currentStep < steps.length - 1) {
-      if (currentStep === steps.length - 2) {
-        await handleSubmit(processForm)();
-      }
       setPreviousStep(currentStep);
       setCurrentStep((step) => step + 1);
     }
   };
+  
 
   const prev = () => {
     if (currentStep > 0) {
@@ -133,47 +500,55 @@ export default function Form() {
       setCurrentStep((step) => step - 1);
     }
   };
-  
+  //Gerer le input de hashtag
+  const [inputValue, setInputValue] = useState("");
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && inputValue.trim() !== "") {
+      e.preventDefault();
+      if (!hashtags.includes(inputValue.trim())) {
+        setValue("tags", [...hashtags, inputValue.trim()], { shouldValidate: true });
+      }
+      setInputValue("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setValue("tags", hashtags.filter((t: string) => t !== tag), { shouldValidate: true });
+  };
 
   return (
-    <section className="absolute inset-0 flex flex-col justify-between p-24">
-      {/* steps */}
-      <nav aria-label="Progress">
-        <ol role="list" className="space-y-4 md:flex md:space-x-8 md:space-y-0">
-          {steps.map((step, index) => (
-            <li key={step.name} className="md:flex-1">
-              {currentStep > index ? (
-                <div className="group flex w-full flex-col border-l-4 border-sky-600 py-2 pl-4 transition-colors md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4">
-                  <span className="text-sm font-medium text-sky-600 transition-colors ">
-                    {step.id}
-                  </span>
-                  <span className="text-sm font-medium">{step.name}</span>
-                </div>
-              ) : currentStep === index ? (
-                <div
-                  className="flex w-full flex-col border-l-4 border-sky-600 py-2 pl-4 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4"
-                  aria-current="step"
-                >
-                  <span className="text-sm font-medium text-sky-600">
-                    {step.id}
-                  </span>
-                  <span className="text-sm font-medium">{step.name}</span>
-                </div>
-              ) : (
-                <div className="group flex w-full flex-col border-l-4 border-gray-200 py-2 pl-4 transition-colors md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4">
-                  <span className="text-sm font-medium text-gray-500 transition-colors">
-                    {step.id}
-                  </span>
-                  <span className="text-sm font-medium">{step.name}</span>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
+    <section className="absolute inset-0 flex p-24">
+  <nav className="w-1/4 flex flex-col space-y-4">
+    <ol role="list">
+      {steps.map((step, index) => (
+        <li key={step.name}>
+          {currentStep > index ? (
+            <div className="group flex flex-col border-l-4 border-sky-600 py-2 pl-4 transition-colors">
+              <span className="text-sm font-medium text-sky-600">{step.id}</span>
+              <span className="text-sm font-medium">{step.name}</span>
+            </div>
+          ) : currentStep === index ? (
+            <div
+              className="flex flex-col border-l-4 border-sky-600 py-2 pl-4"
+              aria-current="step"
+            >
+              <span className="text-sm font-medium text-sky-600">{step.id}</span>
+              <span className="text-sm font-medium">{step.name}</span>
+            </div>
+          ) : (
+            <div className="group flex flex-col border-l-4 border-gray-200 py-2 pl-4 transition-colors">
+              <span className="text-sm font-medium text-gray-500">{step.id}</span>
+              <span className="text-sm font-medium">{step.name}</span>
+            </div>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
 
       {/* Form */}
-      <form className="mt-2" onSubmit={handleSubmit(processForm)}>
+      <form className="w-3/4 ml-8" onSubmit={handleSubmit(processForm)}>
         {currentStep === 0 && (
           <motion.div
             initial={{ x: delta >= 0 ? "50%" : "-50%", opacity: 0 }}
@@ -210,7 +585,7 @@ export default function Form() {
                   )}
                 </div>
               </div>
-
+              
               {/* Catégorie */}
               <div className="sm:col-span-3">
                 <label
@@ -262,6 +637,7 @@ export default function Form() {
                   )}
                 </div>
               </div>
+              
             </div>
           </motion.div>
         )}
@@ -275,28 +651,22 @@ export default function Form() {
               Date et Heure
             </h2>
             <p className="mt-1 text-sm leading-6 text-gray-600">
-              Renseignez les dates de début et de fin de votre événement.
+              Renseignez la date et l'heure de début et de fin de votre événement.
             </p>
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
               {/* Date et heure de début */}
               <div className="sm:col-span-3">
                 <label className="block text-sm font-medium leading-6 text-gray-900">
-                  Date de début
+                  Date et heure de début
                 </label>
                 <input
-                  type="date"
-                  {...register("startDate", { required: "La date de début est requise" })}
-                  className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-base sm:leading-6 p-3"
-                />
-              </div>
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium leading-6 text-gray-900">
-                  Heure de début
-                </label>
-                <input
-                  type="time"
-                  {...register("startTime", { required: "L'heure de début est requise" })}
+                  type="datetime-local"
+                  {...register("startDateTime", {
+                    required: "La date et l'heure de début sont requises",
+                    valueAsDate: true, // Convertit la valeur directement en objet Date
+                  })}
+                  min={new Date().toISOString().slice(0, 16)} // Empêche la sélection d'une date passée
                   className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-base sm:leading-6 p-3"
                 />
               </div>
@@ -304,21 +674,24 @@ export default function Form() {
               {/* Date et heure de fin (optionnel) */}
               <div className="sm:col-span-3">
                 <label className="block text-sm font-medium leading-6 text-gray-900">
-                  Date de fin (optionnel)
+                  Date et heure de fin (optionnel)
                 </label>
                 <input
-                  type="date"
-                  {...register("endDate")}
-                  className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-base sm:leading-6 p-3"
-                />
-              </div>
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium leading-6 text-gray-900">
-                  Heure de fin (optionnel)
-                </label>
-                <input
-                  type="time"
-                  {...register("endTime")}
+                  type="datetime-local"
+                  {...register("endDateTime", {
+                    valueAsDate: true, // Stocke directement une Date
+                    validate: (value) => {
+                      if (!value) return true; // Si vide, pas d'erreur
+                      const startDate = watch("startDateTime");
+                      console.log("start date : ", startDate)
+                      const endDate = new Date(value);
+                      if (startDate && endDate < new Date(startDate)) {
+                        return "La date de fin ne peut pas être avant la date de début.";
+                      }
+                      return true;
+                    },
+                  })}
+                  min={watch("startDateTime") || new Date().toISOString().slice(0, 16)} // Bloque les dates avant le début
                   className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-base sm:leading-6 p-3"
                 />
               </div>
@@ -369,55 +742,39 @@ export default function Form() {
                 </label>
                 <div className="mt-2 space-y-4">
                   {adressFields.map((adress, index) => (
-                    <div
-                      key={adress.id}
-                      className="grid grid-cols-1 gap-4 sm:grid-cols-3"
-                    >
-                      {/* Ville de l'évenement */}
-                      <div>
-                        <input
-                          type="text"
-                          {...register(`adress.${index}.city`)}
-                          placeholder="Ville hote"
-                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                        />
-                        {errors.speakers?.[index]?.name && (
-                          <p className="mt-2 text-sm text-red-400">
-                            {errors.speakers[index].name.message}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Lieu de l'evenement */}
-                      <div>
-                        <input
-                          type="text"
-                          {...register(`adress.${index}.indication`)}
-                          placeholder="Lieu (facultatif)"
-                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                        />
-                      </div>
-
-                      {/* Bouton de suppression */}
-                      <button
-                        type="button"
-                        onClick={() => removeAdress(index)}
-                        className="text-sm text-red-600 hover:text-red-800"
-                      >
-                        Supprimer
-                      </button>
+                    <div key={adress.id} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {/* Affichage des informations de l'adresse */}
+                    <div>
+                      <p className="text-sm">{adress.additional_contact_name}</p>
                     </div>
+                    <div>
+                      <p className="text-sm">{adress.additional_contact_phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm">{adress.location_title}</p>
+                    </div>
+          
+                    {/* Bouton de suppression */}
+                    <button
+                      type="button"
+                      onClick={() => removeAdress(index)}
+                      className="text-sm text-red-600 hover:text-red-800"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
                   ))}
                 </div>
 
                 {/* Bouton d'ajout d'intervenant */}
                 <button
                   type="button"
-                  onClick={() => appendAdress({ city: "", location: "" })}
+                  onClick={/*() => appendAdress({ city: "", location: "" })*/openModal}
                   className="mt-4 text-sm font-medium text-sky-600 hover:text-sky-800"
                 >
                   + Ajouter une addresse
                 </button>
+                {isModalOpen && <DeliveryLocationModal formData={formData1} setFormData={setFormData1} closeModal={closeModal} saveAddress={saveAddress}/>}
               </div>
 
               {/* Lien en ligne (optionnel) */}
@@ -481,100 +838,100 @@ export default function Form() {
               Définissez les modalités de billetterie pour votre événement.
             </p>
 
-            <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-              {/* Type de billet */}
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="ticketType"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Type de billet
-                </label>
-                <div className="mt-2">
-                  <select
-                    id="ticketType"
-                    {...register("ticketType")}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  >
-                    <option value="Gratuite">Gratuite</option>
-                    <option value="Payante">Payante</option>
-                  </select>
-                  {errors.ticketType?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.ticketType.message}
-                    </p>
-                  )}
-                </div>
-              </div>
+            <div className="mt-10 space-y-4">
+              {/* Liste des types de billets */}
+              {ticketsFields.length > 0 ? (
+                ticketsFields.map((ticket, index) => (
+                  <div key={ticket.id} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Nom du billet */}
+                    <div>
+                      <input
+                        type="text"
+                        {...register(`tickets.${index}.name`)}
+                        placeholder="Nom du type de billet"
+                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                      />
+                      {errors.tickets?.[index]?.name && (
+                        <p className="mt-2 text-sm text-red-400">{errors.tickets[index].name.message}</p>
+                      )}
+                    </div>
 
-              {/* Prix du billet (si payant) */}
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="price"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
-                  Prix du billet (en Xaf)
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="number"
-                    id="price"
-                    {...register("price", { valueAsNumber: true })}
-                    placeholder="0.00"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.price?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.price.message}
-                    </p>
-                  )}
-                </div>
-              </div>
+                    {/* Prix du billet */}
+                    <div>
+                      <input
+                        type="number"
+                        {...register(`tickets.${index}.price`, { valueAsNumber: true })}
+                        placeholder="Prix (en XAF)"
+                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                      />
+                      {errors.tickets?.[index]?.price && (
+                        <p className="mt-2 text-sm text-red-400">{errors.tickets[index].price.message}</p>
+                      )}
+                    </div>
+                    {/* Quantité de billets disponibles */}
+                    <div>
+                      <input
+                        type="number"
+                        {...register(`tickets.${index}.quantity`, { valueAsNumber: true })}
+                        placeholder="Nombre de billets"
+                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                      />
+                      {errors.tickets?.[index]?.price && (
+                        <p className="mt-2 text-sm text-red-400">{errors.tickets[index].price.message}</p>
+                      )}
+                    </div>
+
+                    {/* Bouton de suppression */}
+                    <button
+                      type="button"
+                      onClick={() => removeTickets(index)}
+                      className="text-sm text-red-600 hover:text-red-800"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-600">Tous les billets seront gratuits par défaut.</p>
+              )}
+
+              {/* Bouton d'ajout de billet */}
+              <button
+                type="button"
+                onClick={() => appendTickets({ name: "", price: 1 , quantity: 1})}
+                className="text-sm font-medium text-sky-600 hover:text-sky-800"
+              >
+                + Ajouter un type de billet
+              </button>
 
               {/* Date d'ouverture des billets */}
               <div className="sm:col-span-3">
-                <label
-                  htmlFor="ticketOpenDate"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Date d'ouverture de vente des billets
                 </label>
-                <div className="mt-2">
-                  <input
-                    type="date"
-                    id="ticketOpenDate"
-                    {...register("ticketOpenDate")}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.ticketOpenDate?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.ticketOpenDate.message}
-                    </p>
-                  )}
-                </div>
+                <input
+                  type="date"
+                  {...register("ticketOpenDate")}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                />
+                {errors.ticketOpenDate?.message && (
+                  <p className="mt-2 text-sm text-red-400">{errors.ticketOpenDate.message}</p>
+                )}
               </div>
 
               {/* Date de fermeture des billets */}
               <div className="sm:col-span-3">
-                <label
-                  htmlFor="ticketCloseDate"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Date de fermeture de vente des billets
                 </label>
-                <div className="mt-2">
-                  <input
-                    type="date"
-                    id="ticketCloseDate"
-                    {...register("ticketCloseDate")}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.ticketCloseDate?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.ticketCloseDate.message}
-                    </p>
-                  )}
-                </div>
+                <input
+                  type="date"
+                  {...register("ticketCloseDate")}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                />
+                {errors.ticketCloseDate?.message && (
+                  <p className="mt-2 text-sm text-red-400">{errors.ticketCloseDate.message}</p>
+                )}
               </div>
             </div>
           </motion.div>
@@ -589,78 +946,53 @@ export default function Form() {
               Intervenants et Organisateurs
             </h2>
             <p className="mt-1 text-sm leading-6 text-gray-600">
-              Ajoutez les informations sur l'organisateur et les intervenants de
-              votre événement.
+              Ajoutez les informations sur l'organisateur et les intervenants de votre événement.
             </p>
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
               {/* Nom de l'organisateur */}
               <div className="sm:col-span-3">
-                <label
-                  htmlFor="organizerName"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Nom de l'organisateur
                 </label>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    id="organizerName"
-                    {...register("organizerName")}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.organizerName?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.organizerName.message}
-                    </p>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  id="organizerName"
+                  {...register("organizerName")}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                />
+                {errors.organizerName?.message && (
+                  <p className="mt-2 text-sm text-red-400">{errors.organizerName.message}</p>
+                )}
               </div>
 
               {/* Contact de l'organisateur */}
               <div className="sm:col-span-3">
-                <label
-                  htmlFor="organizerContact"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Contact de l'organisateur (Email)
                 </label>
-                <div className="mt-2">
-                  <input
-                    type="email"
-                    id="organizerContact"
-                    {...register("organizerContact")}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.organizerContact?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.organizerContact.message}
-                    </p>
-                  )}
-                </div>
+                <input
+                  type="email"
+                  id="organizerContact"
+                  {...register("organizerContact")}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                />
+                {errors.organizerContact?.message && (
+                  <p className="mt-2 text-sm text-red-400">{errors.organizerContact.message}</p>
+                )}
               </div>
 
-              {/* Site web de l'organisateur */}
+              {/* Site web de l'organisateur (facultatif) */}
               <div className="sm:col-span-6">
-                <label
-                  htmlFor="organizerWebsite"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Site web de l'organisateur (facultatif)
                 </label>
-                <div className="mt-2">
-                  <input
-                    type="url"
-                    id="organizerWebsite"
-                    {...register("organizerWebsite")}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.organizerWebsite?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.organizerWebsite.message}
-                    </p>
-                  )}
-                </div>
+                <input
+                  type="url"
+                  id="organizerWebsite"
+                  {...register("organizerWebsite")}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                />
               </div>
 
               {/* Liste des intervenants */}
@@ -670,10 +1002,7 @@ export default function Form() {
                 </label>
                 <div className="mt-2 space-y-4">
                   {fields.map((speaker, index) => (
-                    <div
-                      key={speaker.id}
-                      className="grid grid-cols-1 gap-4 sm:grid-cols-3"
-                    >
+                    <div key={speaker.id} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                       {/* Nom de l'intervenant */}
                       <div>
                         <input
@@ -689,22 +1018,42 @@ export default function Form() {
                         )}
                       </div>
 
-                      {/* Biographie de l'intervenant */}
+                      {/* Occupation actuelle */}
                       <div>
                         <input
                           type="text"
-                          {...register(`speakers.${index}.bio`)}
-                          placeholder="Biographie (facultatif)"
+                          {...register(`speakers.${index}.occupation`)}
+                          placeholder="Occupation actuelle"
                           className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
                         />
                       </div>
 
-                      {/* Photo de l'intervenant */}
+                      {/* Photo de l'intervenant (Input fichier) */}
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          {...register(`speakers.${index}.photo`)}
+                          className="block w-full text-sm text-gray-900 border border-gray-300 rounded-md shadow-sm file:bg-sky-600 file:text-white file:rounded-md file:border-none file:py-2 file:px-4 file:cursor-pointer hover:file:bg-sky-700"
+                        />
+                      </div>
+
+                      {/* Facebook */}
                       <div>
                         <input
                           type="url"
-                          {...register(`speakers.${index}.photo`)}
-                          placeholder="URL de la photo (facultatif)"
+                          {...register(`speakers.${index}.facebook`)}
+                          placeholder="Facebook (facultatif)"
+                          className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                        />
+                      </div>
+
+                      {/* LinkedIn */}
+                      <div>
+                        <input
+                          type="url"
+                          {...register(`speakers.${index}.linkedin`)}
+                          placeholder="LinkedIn (facultatif)"
                           className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
                         />
                       </div>
@@ -724,7 +1073,7 @@ export default function Form() {
                 {/* Bouton d'ajout d'intervenant */}
                 <button
                   type="button"
-                  onClick={() => append({ name: "", bio: "", photo: "" })}
+                  onClick={() => append({ name: "", occupation: "", photo: "", facebook: "", linkedin: "" })}
                   className="mt-4 text-sm font-medium text-sky-600 hover:text-sky-800"
                 >
                   + Ajouter un intervenant
@@ -733,7 +1082,7 @@ export default function Form() {
             </div>
           </motion.div>
         )}
-        {currentStep === 5 && ( // currentStep = 5 car les étapes sont indexées à partir de 0
+        {currentStep === 5 && ( // Étape 6
           <motion.div
             initial={{ x: delta >= 0 ? "50%" : "-50%", opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -749,10 +1098,7 @@ export default function Form() {
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
               {/* Image de couverture */}
               <div className="sm:col-span-6">
-                <label
-                  htmlFor="coverImage"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Image de couverture
                 </label>
                 <div className="mt-2">
@@ -765,7 +1111,11 @@ export default function Form() {
                   {preview && (
                     <div className="mt-2">
                       <p className="text-gray-600 text-sm">Aperçu :</p>
-                      <img src={preview} alt="Prévisualisation" className="w-32 h-32 object-cover mt-1 border rounded-md" />
+                      <img
+                        src={preview}
+                        alt="Prévisualisation"
+                        className="w-32 h-32 object-cover mt-1 border rounded-md"
+                      />
                     </div>
                   )}
                 </div>
@@ -773,10 +1123,7 @@ export default function Form() {
 
               {/* Galerie d'images */}
               <div className="sm:col-span-6">
-                <label
-                  htmlFor="gallery"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Galerie d'images
                 </label>
                 <div className="mt-2 space-y-2">
@@ -789,7 +1136,11 @@ export default function Form() {
                         className="block w-full"
                       />
                       {previews[index] && (
-                        <img src={previews[index] || ""} alt={`Prévisualisation ${index + 1}`} className="w-20 h-20 object-cover border rounded-md" />
+                        <img
+                          src={previews[index] || ""}
+                          alt={`Prévisualisation ${index + 1}`}
+                          className="w-20 h-20 object-cover border rounded-md"
+                        />
                       )}
                       <button
                         type="button"
@@ -812,26 +1163,46 @@ export default function Form() {
 
               {/* Vidéo promotionnelle */}
               <div className="sm:col-span-6">
-                <label
-                  htmlFor="promoVideo"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label className="block text-sm font-medium leading-6 text-gray-900">
                   Vidéo promotionnelle (facultatif)
                 </label>
-                <div className="mt-2">
-                  <input
-                    type="url"
-                    id="promoVideo"
-                    {...register("promoVideo")}
-                    placeholder="URL de la vidéo"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.promoVideo?.message && (
-                    <p className="mt-2 text-sm text-red-400">
-                      {errors.promoVideo.message}
-                    </p>
+                <Controller
+                  name="promoVideo"
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <div className="mt-2">
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            onChange(file);
+                            setPreviewVideo(URL.createObjectURL(file)); // Mise à jour de l'aperçu
+                          }
+                        }}
+                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                      />
+
+                      {value && typeof value === "object" && "name" in value && (
+                        <div className="mt-2 relative">
+                          <video src={previewVideo || ""} controls className="w-full max-w-md rounded-lg border" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onChange(undefined);
+                              setPreviewVideo(null);
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 p-1 rounded-full"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
-                </div>
+                />
+
               </div>
             </div>
           </motion.div>
@@ -859,17 +1230,45 @@ export default function Form() {
                 >
                   Tags
                 </label>
-                <div className="mt-2">
-                  <input
+                <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md p-2 mt-2">
+                {hashtags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="flex items-center bg-sky-100 text-sky-700 px-2 py-1 rounded-md text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="ml-2 text-sky-900 hover:text-red-500"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  id="tags"
+                  
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ajouter un hashtag..."
+                  className="flex-1 border-none focus:ring-0 outline-none text-sm p-1"
+                />
+                  {/* <input
                     type="text"
                     id="tags"
                     {...register("tags")}
-                    
                     onChange={handleTagsChange}
                     placeholder="Ex: Musique, Technologie, Art..."
                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.tags && <p className="mt-2 text-sm text-red-400">{errors.tags.message as string}</p>}
+                  /> */}
+                  {errors.tags && (
+                    <p className="mt-2 text-sm text-red-400">
+                      {errors.tags.message as string}
+                    </p>
+                  )}
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
                   Séparez les tags par des virgules.
@@ -1005,19 +1404,8 @@ export default function Form() {
                 </div>
               </div>
             </div>
-
-            
           </motion.div>
         )}
-        {/* Bouton de création d'événement */}
-        {currentStep === 8 && <div className="mt-10 flex justify-end">
-              <button
-                onClick={onSubmit}
-                className="inline-flex items-center rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 transition duration-300"
-              >
-                Créer l’événement
-              </button>
-            </div>}
       </form>
 
       {/* Navigation */}
@@ -1044,27 +1432,39 @@ export default function Form() {
               />
             </svg>
           </button>
-          <button
-            type="button"
-            onClick={next}
-            disabled={currentStep === steps.length - 1}
-            className="rounded bg-white px-2 py-1 text-sm font-semibold text-sky-900 shadow-sm ring-1 ring-inset ring-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="h-6 w-6"
+          {/* Bouton Suivant ou Création d'événement */}
+          {currentStep === 8 ? (
+            // Bouton "Créer l’événement"
+            <button
+              type="button"
+              onClick={onSubmitPersonnal}
+              className="inline-flex items-center rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 transition duration-300"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 4.5l7.5 7.5-7.5 7.5"
-              />
-            </svg>
-          </button>
+              Créer l’événement
+            </button>
+          ) : (
+            // Bouton "Next"
+            <button
+              type="button"
+              onClick={next}
+              className="rounded bg-white px-2 py-1 text-sm font-semibold text-sky-900 shadow-sm ring-1 ring-inset ring-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
+                className="h-6 w-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </section>

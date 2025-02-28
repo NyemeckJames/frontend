@@ -1,3 +1,4 @@
+"use client"
 import Link from "next/link";
 import React from "react";
 import "./home.scss";
@@ -23,8 +24,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 const page = () => {
+  const router = useRouter()
+  const goTo = (event:any)=>{
+    window.location.href = '/events'
+  }
   return (
     <div className="home">
       <style>
@@ -35,22 +41,23 @@ const page = () => {
         <Image src={mboalogo} alt={""} objectFit="contain" className="logo" />
         <ul className="nav-items">
           <li>
-            <a href="/Login">
+            <a href="/login">
               <span>Se connecter</span>{" "}
             </a>
           </li>
           <li>
-            <Link href={""}>
+            <Link href={"/inscription"}>
               <span>S'inscrire</span>
             </Link>
           </li>
           <li>
-            <Link href={""}>
+            <Link href={"/new-event"}>
               <span>Publier un évènement</span>
             </Link>
           </li>
         </ul>
       </nav>
+
       <main className="grid">
         <section className="welcome flex justify-center text-center items-center">
           <span className="text-[40px] font-[1000] p-[64px]">
@@ -81,7 +88,7 @@ const page = () => {
         </section>
         <section className="event-list flex justify-center items-center w-[90%] mb-4 mx-auto">
           <div className="w-full grid grid-cols-[repeat(auto-fit,minmax(288px,1fr))] ml-4 gap-y-2">
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -121,7 +128,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -161,7 +168,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -201,7 +208,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -241,7 +248,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -281,7 +288,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -321,7 +328,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -361,7 +368,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -401,7 +408,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -441,7 +448,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -481,7 +488,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -521,7 +528,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -561,7 +568,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -601,7 +608,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -641,7 +648,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -681,7 +688,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -721,7 +728,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"
@@ -761,7 +768,7 @@ const page = () => {
                 </div>
               </div>
             </div>
-            <div className="relative flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
+            <div onClick={goTo} className="relative cursor-pointer flex flex-col bg-white shadow-sm border border-slate-200 rounded-lg w-72">
               <div className="relative h-56 m-1 overflow-hidden text-white rounded-md">
                 <Image
                   src="http://127.0.0.1:8000/media/evenements/Goku.jpg"

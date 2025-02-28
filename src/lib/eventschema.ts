@@ -12,6 +12,11 @@ type StepField = {
     required?: boolean;
     options?: string[]; // Pour les selects
 };
+const TicketSchema = z.object({
+  name: z.string().min(1, "Le nom du billet est requis"),
+  price: z.number().min(1, "Le prix ne peut pas être 0 ou moins"),
+  quantity: z.number().min(1,"Au moins 1 billet du type")
+});
 export const eventSchema = z.object({
     name: z.string().min(1, "Le nom de l'événement est requis"),
     description: z.string().optional(),
@@ -20,25 +25,34 @@ export const eventSchema = z.object({
       z.date().nullable(),
       z.date().nullable(),
   ]).optional(),
-    startDate: z.string().min(1, "La date de début est requise"),
-    startTime: z.string().min(1, "L'heure de début est requise"),
-    endDate: z.string().optional(),
-    endTime: z.string().optional(),
-    timezone: z.string().optional(),
-    location: z.string().optional(),
-    city: z.string().optional(),
-    adress: z.array(z.object({ city: z.string(), location: z.string().optional(), indication: z.string().optional() })).optional(),
+    startDateTime: z.string()
+    .nonempty("La date et l'heure de début sont requises")
+    .transform((val) => new Date(val).toISOString()), // Convertit en UTC,
+    endDateTime: z.string()
+    .optional()
+    .transform((val) => (val ? new Date(val).toISOString() : undefined)), // Convertit si rempli
+    adress: z.array(z.object({
+      additional_contact_name: z.string().optional(),
+      additional_contact_phone: z.string().optional(),
+      delivery_track_id: z.string().optional(),
+      location: z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+      }),
+      location_title: z.string().optional(),
+      name: z.string().optional(),
+    })).optional(),
     country: z.string().optional(),
     onlineLink: z.string().url().or(z.literal("")).optional(),
-    capacity: z.number().optional(),
-    ticketType: z.enum(["Gratuite", "Payante"]),
+    capacity: z.number(),
+    tickets: z.array(TicketSchema).optional(), // Si vide, tous les billets sont gratuits
     price: z.number().optional(),
     ticketOpenDate: z.string().optional(),
     ticketCloseDate: z.string().optional(),
     organizerName: z.string(),
     organizerContact: z.string().email("Email invalide"),
-    organizerWebsite: z.string().url().optional(),
-    speakers: z.array(z.object({ name: z.string(), bio: z.string().optional(), photo: z.string().url().optional() })).optional(),
+    organizerWebsite: z.string().url().or(z.literal("")).optional(),
+    speakers: z.array(z.object({ name: z.string(), occupation: z.string().optional(),facebook: z.string().url().or(z.literal("")).optional(),linkedin: z.string().url().or(z.literal("")).optional() ,photo: z.any().optional() })).optional(),
     coverImage: z.any()
     .refine((files) => files?.length > 0, "Une image est requise")
     .refine(
@@ -57,17 +71,10 @@ export const eventSchema = z.object({
         .refine((files) =>files && files.length > 0 && files[0]?.size <= 2 * 1024 * 1024, "L'image ne doit pas dépasser 2Mo")
     )
     .min(1, "Ajoutez au moins une image"),
-    promoVideo: z.string().url().optional(),
-    tags: z.string()
-    .trim()
-    .refine((value) => value.length > 0, "Au moins un tag est requis")
-    .transform((value) =>
-      value
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0) // Supprime les tags vides
-    )
-    .refine((tags) => tags.length > 0, "Ajoutez au moins un tag"),
+    promoVideo: z.any().optional(),
+    tags: z.array(z.string().min(1, "Chaque hashtag doit contenir au moins un caractère"))
+    .max(5, "Tu ne peux pas ajouter plus de 5 hashtags")
+    .optional(),
     confirmationEmail: z.string().optional(),
     reminderMessages: z.boolean().optional(),
     qrCode: z.boolean().optional(),
