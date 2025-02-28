@@ -164,7 +164,7 @@ const DeliveryLocationModal: React.FC<DeliveryLocationModalProps> = ({
       }
       if (!document.querySelector("#google-maps-script")) {
         const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAynBJfaFqCPhOSNEeMLsz9DWKUDjCaIZ4&libraries=places&callback=initMap`;
+        //script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAynBJfaFqCPhOSNEeMLsz9DWKUDjCaIZ4&libraries=places&callback=initMap`;
         script.async = true;
         document.body.appendChild(script);
         // Define the initMap function globally so it can be called by the Google Maps API
