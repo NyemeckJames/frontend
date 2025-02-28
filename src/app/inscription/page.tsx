@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState(""); 
   const [successMessage, setSuccessMessage] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  
 
   // ✅ Validation stricte du numéro de téléphone au Cameroun
   const validatePhone = (phone: string) => {
@@ -75,6 +76,7 @@ export default function RegisterPage() {
         setErrorMessage(data.error || "Erreur lors de l'inscription.");
       } else {
         setSuccessMessage("Inscription réussie ! Vérifiez votre email pour activer votre compte.");
+        router.push("/interface/home")
       }
     } catch (error) {
       setErrorMessage("Impossible de se connecter au serveur.");

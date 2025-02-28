@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function VerifyEmail() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [message, setMessage] = useState("Vérification en cours...");
-
+  const router = useRouter()
   useEffect(() => {
     if (!token) {
       setMessage("Token manquant.");
@@ -23,7 +23,10 @@ export default function VerifyEmail() {
         const data = await response.json();
         console.log(response)
         if (response.ok) {
-          setMessage("Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.");
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user)); 
+          setMessage("Votre email a été vérifié avec succès.");
+          router.push('/interface/home')
         } else {
           setMessage(data.error || "Échec de la vérification.");
         }

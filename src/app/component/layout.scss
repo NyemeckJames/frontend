@@ -1,0 +1,15 @@
+.layout-personal {
+  font-family: "Podkova", serif;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 100px 1fr;
+  grid-template-areas:
+    "navbar navbar"
+    "main main";
+  min-height: 100vh;
+  main {
+    grid-area: main;
+    display: grid;
+    background-color: #f9fafb;
+  }
+}

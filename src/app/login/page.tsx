@@ -1,23 +1,54 @@
-"use client"
+"use client";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import myImage from "../../../public/Images/Mboa_event.png"; // Remplace par ton image réelle
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleChange = (e:any) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log("Form submitted", formData);
+    setErrorMessage(""); // Réinitialise les erreurs
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/users/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Échec de la connexion");
+      }
+
+      // Stocker le token dans localStorage (ou cookies si besoin)
+      localStorage.setItem("token", data.access);
+      localStorage.setItem("refreshToken", data.refresh);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Redirection après connexion
+      router.push("/interface/home"); // Remplace par la page désirée
+
+    } catch (error: any) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -25,9 +56,9 @@ export default function LoginPage() {
       <div className="grid md:grid-cols-2 w-full max-w-4xl bg-white shadow-lg rounded-2xl overflow-hidden">
         {/* Section Logo */}
         <section className="flex flex-col items-center justify-center p-10 bg-white text-[#1a4162]">
-          <Image src={myImage} alt="Logo"  />
+          <Image src={myImage} alt="Logo" />
           <h1 className="text-3xl font-bold text-center mt-4 hidden md:block">
-            La meilleure plateforme de promotion evenementielle
+            La meilleure plateforme de promotion événementielle
           </h1>
         </section>
 
@@ -53,7 +84,6 @@ export default function LoginPage() {
                 placeholder="Email"
                 required
               />
-              {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
             </div>
 
             {/* Mot de passe */}
@@ -82,6 +112,9 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Message d'erreur */}
+            {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
+
             {/* Mot de passe oublié */}
             <Link href="#" className="text-blue-400 text-sm hover:underline block text-right">
               Mot de passe oublié ?
@@ -91,14 +124,15 @@ export default function LoginPage() {
             <button
               type="submit"
               className="bg-[#1a4162] shadow-lg mt-6 p-3 text-white rounded-lg w-full hover:scale-105 transition duration-300 ease-in-out"
+              disabled={loading}
             >
-              Se connecter
+              {loading ? "Connexion..." : "Se connecter"}
             </button>
           </form>
 
           {/* Redirection vers Sign Up */}
           <div className="mt-4 text-center text-sm text-gray-600">
-            Vous n'avez pas de compte ? {" "}
+            Vous n'avez pas de compte ?{" "}
             <Link href="/inscription" className="text-blue-400 hover:underline">
               Inscrivez-vous
             </Link>
@@ -106,6 +140,5 @@ export default function LoginPage() {
         </section>
       </div>
     </div>
-
   );
 }
