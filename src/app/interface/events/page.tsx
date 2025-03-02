@@ -14,6 +14,7 @@ import { Event } from "@/lib/models";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import ReservationModal from "@/app/component/ReservationModal";
 
 const page = () => {
   const router = useRouter();
@@ -60,13 +61,13 @@ const page = () => {
       <section className="bg-white shadow-md rounded-lg p-6 flex flex-col items-center">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Galerie Photo</h2>
         <div className="w-full max-w-md">
-          {event?.gallery && event.gallery.length > 0 ? (
+          {event?.event_images && event.event_images.length > 0 ? (
             <Carousel>
               <CarouselContent>
-                {event.gallery.map((image, index) => (
+                {event.event_images.map((image, index) => (
                   <CarouselItem key={index}>
                     <Image
-                      src={`http://127.0.0.1:8000${image}`}
+                      src={`http://127.0.0.1:8000${image.image}`}
                       alt={`Gallery image ${index + 1}`}
                       width={500}
                       height={300}
@@ -103,9 +104,7 @@ const page = () => {
           <button className="bg-[#002c51] flex flex-row justify-center items-center text-white px-4 py-2 shadow-md hover:bg-[#004151] transition">
             Ajouter au calendrier <i className="material-icons">event</i>
           </button>
-          <button className="bg-green-600 flex flex-row justify-center items-center text-white px-4 py-2 shadow-md hover:bg-green-700 transition">
-            Reserver <i className="material-icons">chevron_right</i>
-          </button>
+          {event && <ReservationModal event={event}/>}
         </div>
       </section>
 

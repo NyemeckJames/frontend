@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [loading, setIsLoading] = useState<boolean>(false);
   const [user, setUser] = useState<any>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter()
@@ -35,8 +36,9 @@ const Navbar = () => {
     router.push('/interface/home')
   }
 
+
   return (
-    <nav>
+    <nav id="navigation">
       <Image src={mboalogo} alt={""} objectFit="contain" className="logo cursor-pointer" onClick={goHome}/>
 
       {!user ? (
@@ -60,12 +62,12 @@ const Navbar = () => {
       ) : (
         <div className="user-section flex flex-row gap-4 items-center justify-center">
           {(user.role === "PARTICIPANT") && (
-            <Link href="/become-organizer" id="publish-event-button">
+            <Link href="/interface/become-organizer" id="publish-event-button">
               <span>Publier un évènement</span>
             </Link>
           )}
           {(user.role === "ORGANISATEUR") && (
-            <Link href="/new-event" id="publish-event-button">
+            <Link href="/interface/new-event" id="publish-event-button">
               <span>Publier un évènement</span>
             </Link>
           )}

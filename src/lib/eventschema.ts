@@ -59,7 +59,7 @@ export const eventSchema = z.object({
       (files) => files && files.length > 0 && ["image/jpg","image/jpeg", "image/png", "image/webp"].includes(files[0]?.type),
       "Format invalide (JPEG, PNG, WEBP uniquement)"
     )
-    .refine((files) => files && files.length > 0 && files[0]?.size <= 2 * 1024 * 1024, "L'image ne doit pas dépasser 2Mo"),
+    .refine((files) => files && files.length > 0 && files[0]?.size <= 5 * 1024 * 1024, "L'image ne doit pas dépasser 2Mo"),
     gallery: z.array(
       z
         .any()
@@ -68,7 +68,7 @@ export const eventSchema = z.object({
           (files) => ["image/jpeg", "image/jpg","image/png", "image/webp"].includes(files[0]?.type),
           "Format invalide (JPEG, PNG, WEBP uniquement)"
         )
-        .refine((files) =>files && files.length > 0 && files[0]?.size <= 2 * 1024 * 1024, "L'image ne doit pas dépasser 2Mo")
+        .refine((files) =>files && files.length > 0 && files[0]?.size <= 5 * 1024 * 1024, "L'image ne doit pas dépasser 2Mo")
     )
     .min(1, "Ajoutez au moins une image"),
     promoVideo: z.any().optional(),

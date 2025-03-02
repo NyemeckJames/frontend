@@ -1,26 +1,29 @@
 "use client"
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import dynamic from 'next/dynamic'
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import axios from "axios";
+import router from "next/router";
+import { useRouter } from "next/navigation";
 const Select = dynamic(() => import('react-select'), { ssr: false })
 
-const schema = z.object({
-  nom_entreprise: z.string().min(2, "Le nom de l'entreprise est requis"),
-  facebook: z.string().url("Lien invalide"),
-  twitter: z.string().url("Lien invalide"),
-  numero_cni: z.string().min(5, "Numéro CNI invalide"),
-  photo_cni: z.instanceof(File).optional(),
-  types_evenements: z.array(z.string()).min(1, "Sélectionnez au moins un type"),
-  taille_evenements: z.string().min(1, "Sélectionnez une taille"),
-  mode_financement: z.string().min(1, "Sélectionnez un mode de financement"),
-  accept_conditions: z.boolean().refine((val) => val === true, {
-    message: "Vous devez accepter les conditions.",
-  }),
-});
+  const schema = z.object({
+    nom_entreprise: z.string().min(2, "Le nom de l'entreprise est requis"),
+    facebook: z.string().url("Lien invalide"),
+    twitter: z.string().url("Lien invalide"),
+    numero_cni: z.string().min(5, "Numéro CNI invalide"),
+    photo_cni: z.any().optional(),
+    types_evenements: z.array(z.object({ value: z.string(), label: z.string()})),
+    taille_evenements: z.object({value:z.string(),label:z.string()}),
+    mode_financement: z.object({value:z.string(),label:z.string()}),
+    accept_conditions: z.boolean().refine((val) => val === true, {
+      message: "Vous devez accepter les conditions.",
+    }),
+  });
 
 const optionsTypesEvenements = [
   { value: "conference", label: "Conférence" },
@@ -50,22 +53,83 @@ const OrganisateurForm = () => {
     formState: { errors },
   } = useForm({ resolver: zodResolver(schema) });
 
+  const [loading, setLoading] = useState(false);
   const {toast} = useToast();
-
+  const router = useRouter();
   const onSubmit = (data:any) => {
     console.log("Données soumises:", data);
   };
-  const handleSubmitData = ()=>{
+  
+  const handleSubmitData = async () => {
+    const data = getValues();
+    console.log(" Data : ", data)
+    console.log("taille_evenements", data.taille_evenements.value)
+  
     if (!watch("accept_conditions")) {
       toast({
-        description: "Vous devez accepeter les conditions !",
+        description: "Vous devez accepter les conditions !",
         variant: "warning",
         duration: 3000,
       });
       return;
     }
-    console.log("Données du formulaire : ",getValues())
-  }
+  
+    setLoading(true);
+  
+    try {
+      const formData = new FormData();
+      const eventTypes: string[] = []
+      formData.append("nom_entreprise", data.nom_entreprise);
+      formData.append("numero_cni", data.numero_cni);
+      
+      // Envoyer seulement les valeurs des types d'événements
+      data.types_evenements.forEach((type)=>{
+        eventTypes.push(type.value)
+        formData.append("types_evenements", type.value);
+      })
+      console.log("types_evenements", JSON.stringify(eventTypes))
+      
+  
+      formData.append("taille_evenements", data.taille_evenements.value);
+      formData.append("mode_financement", data.mode_financement.value);
+  
+      if (data.facebook) formData.append("facebook", data.facebook);
+      if (data.twitter) formData.append("twitter", data.twitter);
+  
+      // Ajouter la photo s'il y en a une
+      if (data.photo_cni) {
+        formData.append("photo_cni", data.photo_cni[0]);
+      }
+  
+      const response = await axios.post("http://127.0.0.1:8000/message/devenir-organisateur/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      console.log(response)
+  
+      toast({ description: "Votre demande a été envoyée avec succès !", variant: "success" });
+  
+      // Rediriger l'utilisateur vers une page d'attente
+      router.push("/demande-en-attente");
+    } catch (error: unknown) {
+      console.error("Erreur Axios :", error);
+
+      let message = "Erreur lors de la soumission.";
+    
+      if (axios.isAxiosError(error)) { // ✅ Vérifier si c'est une erreur Axios
+        message = error.response?.data?.error || "Erreur du serveur.";
+      } else if (error instanceof Error) { // ✅ Vérifier si c'est une erreur JS classique
+        message = error.message;
+      }
+    
+      toast({ description: message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   return (
     <>

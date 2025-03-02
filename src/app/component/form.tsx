@@ -87,17 +87,17 @@ export default function Form() {
     control,
     name: "gallery",
   });
-  const { 
-    fields:ticketsFields, 
-    append:appendTickets, 
-    remove:removeTickets, 
+  const {
+    fields: ticketsFields,
+    append: appendTickets,
+    remove: removeTickets,
   } = useFieldArray({
     control,
     name: "tickets",
   });
 
   const [previewVideo, setPreviewVideo] = useState<string | null>(null);
-  const {toast} = useToast();
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => {
@@ -112,23 +112,23 @@ export default function Form() {
     });
     setIsModalOpen(true);
   }
-  const closeModal = () =>{
+  const closeModal = () => {
     setIsModalOpen(false);
     console.log("Formdata 1 : ", formData1)
   }
-  const saveAddress = ()=>{
+  const saveAddress = () => {
     // Mettre à jour les adresses en fonction des données reçues du modal
-  const newAddress = {
-    additional_contact_name: formData1.additional_contact_name,
-    additional_contact_phone: formData1.additional_contact_phone,
-    delivery_track_id: formData1.delivery_track_id,
-    location: formData1.location,
-    location_title: formData1.location_title,
-    name: formData1.name,
-  };
+    const newAddress = {
+      additional_contact_name: formData1.additional_contact_name,
+      additional_contact_phone: formData1.additional_contact_phone,
+      delivery_track_id: formData1.delivery_track_id,
+      location: formData1.location,
+      location_title: formData1.location_title,
+      name: formData1.name,
+    };
 
-  appendAdress(newAddress); // Ajouter l'adresse au tableau
-  console.log('Nouvelles données d\'adresse : ', newAddress);
+    appendAdress(newAddress); // Ajouter l'adresse au tableau
+    console.log('Nouvelles données d\'adresse : ', newAddress);
     closeModal()
   }
 
@@ -143,7 +143,7 @@ export default function Form() {
       return () => URL.revokeObjectURL(previewUrl);
     }
   }, [imageFile]);
-  
+
   useEffect(() => {
     const files = watch("gallery");
     if (files) {
@@ -159,7 +159,7 @@ export default function Form() {
         previewUrls.forEach((url) => url && URL.revokeObjectURL(url));
     }
   }, [watch("gallery")]);
-  
+
   const hashtags = watch("tags") || [];
 
   const processForm: SubmitHandler<Inputs> = (data) => {
@@ -167,83 +167,83 @@ export default function Form() {
     reset();
   };
 
-const onSubmitPersonnal = async () => {
-  const values = getValues();
-  console.log("Values du formulaire : ", values);
-  const formData = new FormData();
+  const onSubmitPersonnal = async () => {
+    const values = getValues();
+    console.log("Values du formulaire : ", values);
+    const formData = new FormData();
 
-  // Ajout des champs texte sans doublons
-  Object.entries(values).forEach(([key, value]) => {
+    // Ajout des champs texte sans doublons
+    Object.entries(values).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-          const uniqueValues = [...new Set(value)]; // 🔥 Supprime les doublons
+        const uniqueValues = [...new Set(value)]; // 🔥 Supprime les doublons
 
-          uniqueValues.forEach((item, index) => {
-              if (typeof item === "object" && item !== null) {
-                  Object.entries(item).forEach(([subKey, subValue]) => {
-                      if (subKey === "location") {
-                          formData.append(`${key}[${index}][${subKey}]`, JSON.stringify(subValue));
-                      } else {
-                          formData.append(`${key}[${index}][${subKey}]`, subValue as string);
-                      }
-                  });
+        uniqueValues.forEach((item, index) => {
+          if (typeof item === "object" && item !== null) {
+            Object.entries(item).forEach(([subKey, subValue]) => {
+              if (subKey === "location") {
+                formData.append(`${key}[${index}][${subKey}]`, JSON.stringify(subValue));
               } else {
-                  formData.append(`${key}[${index}]`, item as string);
+                formData.append(`${key}[${index}][${subKey}]`, subValue as string);
               }
-          });
+            });
+          } else {
+            formData.append(`${key}[${index}]`, item as string);
+          }
+        });
       } else {
-          formData.append(key, value as string);
+        formData.append(key, value as string);
       }
-  });
+    });
 
-  // Gestion des fichiers sans doublons
-  if (values.coverImage?.length > 0) {
+    // Gestion des fichiers sans doublons
+    if (values.coverImage?.length > 0) {
       formData.append("coverImage", values.coverImage[0]); // ✅ Prend le premier fichier
-  }
+    }
 
-  if (values.promoVideo?.length > 0) {
+    if (values.promoVideo?.length > 0) {
       formData.append("promoVideo", values.promoVideo[0]); // ✅ Prend le premier fichier
-  }
+    }
 
-  if (values.gallery?.length > 0) {
+    if (values.gallery?.length > 0) {
       values.gallery.forEach((fileList: FileList, index: number) => {
-          const uniqueFiles = Array.from(new Set(fileList)); // 🔥 Supprime les doublons
-          uniqueFiles.forEach((file, fileIndex) => {
-              formData.append(`gallery[${index}][${fileIndex}]`, file);
-          });
+        const uniqueFiles = Array.from(new Set(fileList)); // 🔥 Supprime les doublons
+        uniqueFiles.forEach((file, fileIndex) => {
+          formData.append(`gallery[${index}][${fileIndex}]`, file);
+        });
       });
-  }
+    }
 
-  if (values.speakers?.length && values.speakers?.length > 0) {
+    if (values.speakers?.length && values.speakers?.length > 0) {
       values.speakers.forEach((speaker, index) => {
-          Object.entries(speaker).forEach(([subKey, subValue]) => {
-              if (subKey === "photo" && subValue.length > 0) {
-                  formData.append(`speakers[${index}][photo]`, subValue[0]); // ✅ Prend le premier fichier
-              } else {
-                  formData.append(`speakers[${index}][${subKey}]`, subValue as string);
-              }
-          });
+        Object.entries(speaker).forEach(([subKey, subValue]) => {
+          if (subKey === "photo" && subValue.length > 0) {
+            formData.append(`speakers[${index}][photo]`, subValue[0]); // ✅ Prend le premier fichier
+          } else {
+            formData.append(`speakers[${index}][${subKey}]`, subValue as string);
+          }
+        });
       });
-  }
+    }
 
-  // Envoi de la requête
-  try {
+    // Envoi de la requête
+    try {
       const response = await fetch("http://127.0.0.1:8000/event/create/", {
-          method: "POST",
-          body: formData,
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
-          throw new Error("Erreur lors de la création de l'événement");
+        throw new Error("Erreur lors de la création de l'événement");
       }
 
       const data = await response.json();
       console.log("Événement créé avec succès :", data);
-  } catch (error) {
+    } catch (error) {
       console.error("Erreur:", error);
-  }
-};
+    }
+  };
 
-  
+
   useEffect(() => {
     // Obtenir l'heure actuelle en format "HH:MM"
     const now = new Date();
@@ -261,8 +261,8 @@ const onSubmitPersonnal = async () => {
     const startDate = values.startDateTime;
     const capacityMax = values.capacity
     const totalTickets = tickets.reduce((sum, t) => sum + (t.quantity || 0), 0);
-  
-    
+
+
     if (ticketOpenDate && new Date(ticketOpenDate) > new Date(startDate)) {
       toast({
         description: "La date d'ouverture des ventes ne peut pas être après la date de début de l'événement !",
@@ -279,10 +279,10 @@ const onSubmitPersonnal = async () => {
       });
       return false
     }
-  
-    
-  
-    if (ticketOpenDate &&  ticketCloseDate && ticketCloseDate < ticketOpenDate) {
+
+
+
+    if (ticketOpenDate && ticketCloseDate && ticketCloseDate < ticketOpenDate) {
       toast({ description: "La date de fermeture doit être après la date d'ouverture !", variant: "warning", duration: 3000 });
       return false;
     }
@@ -294,56 +294,56 @@ const onSubmitPersonnal = async () => {
       });
       return false;
     }
-      // Complétion automatique des billets gratuits si nécessaire
+    // Complétion automatique des billets gratuits si nécessaire
     if (totalTickets < capacityMax && tickets.length > 0) {
       tickets.push({ name: "Billet gratuit", price: 0, quantity: capacityMax - totalTickets });
     }
-  
+
     return true;
   };
   const next = async () => {
     const fields = steps[currentStep].fields;
-    
+
     const output = await trigger(fields as unknown as FieldName[], {
       shouldFocus: true,
     });
     const step4Validate = validateStep4();
     if (!step4Validate) return;
-    
+
     if (!output) return;
-  
+
     // Récupération des valeurs
     const values = getValues();
     const startDate = values.startDateTime ? new Date(values.startDateTime) : null;
     const endDate = values.endDateTime ? new Date(values.endDateTime) : null;
     const now = new Date();
-    
-  
+
+
     // Vérifications et alertes
     if (startDate && isNaN(startDate.getTime())) {
       toast({
-        description : "La date de début requise  !",
-        variant : "warning",
+        description: "La date de début requise  !",
+        variant: "warning",
         duration: 3000,
       })
       return;
     }
     if (startDate && startDate < now) {
       toast({
-        description : "La date de début ne peut pas être dans le passé  !",
-        variant : "warning",
+        description: "La date de début ne peut pas être dans le passé  !",
+        variant: "warning",
         duration: 3000,
       })
       return;
     }
-  
+
     if (startDate && endDate && endDate < startDate) {
       toast({
-        description : "La date de fin ne peut pas être avant la date de début !",
-        variant : "warning",
+        description: "La date de fin ne peut pas être avant la date de début !",
+        variant: "warning",
         duration: 3000,
       })
-      
+
       return;
     }
     setFormData((prev) => ({ ...prev, ...getValues() }));
@@ -352,13 +352,13 @@ const onSubmitPersonnal = async () => {
       currentStep + 1,
       getValues()
     );
-  
+
     if (currentStep < steps.length - 1) {
       setPreviousStep(currentStep);
       setCurrentStep((step) => step + 1);
     }
   };
-  
+
 
   const prev = () => {
     if (currentStep > 0) {
@@ -384,34 +384,34 @@ const onSubmitPersonnal = async () => {
   };
 
   return (
-    <section className="absolute inset-0 flex p-24">
-  <nav className="w-1/4 flex flex-col space-y-4">
-    <ol role="list">
-      {steps.map((step, index) => (
-        <li key={step.name}>
-          {currentStep > index ? (
-            <div className="group flex flex-col border-l-4 border-sky-600 py-2 pl-4 transition-colors">
-              <span className="text-sm font-medium text-sky-600">{step.id}</span>
-              <span className="text-sm font-medium">{step.name}</span>
-            </div>
-          ) : currentStep === index ? (
-            <div
-              className="flex flex-col border-l-4 border-sky-600 py-2 pl-4"
-              aria-current="step"
-            >
-              <span className="text-sm font-medium text-sky-600">{step.id}</span>
-              <span className="text-sm font-medium">{step.name}</span>
-            </div>
-          ) : (
-            <div className="group flex flex-col border-l-4 border-gray-200 py-2 pl-4 transition-colors">
-              <span className="text-sm font-medium text-gray-500">{step.id}</span>
-              <span className="text-sm font-medium">{step.name}</span>
-            </div>
-          )}
-        </li>
-      ))}
-    </ol>
-  </nav>
+    <section className="inset-0 flex p-24">
+      <nav className="w-1/4 flex flex-col space-y-4">
+        <ol role="list">
+          {steps.map((step, index) => (
+            <li key={step.name}>
+              {currentStep > index ? (
+                <div className="group flex flex-col border-l-4 border-sky-600 py-2 pl-4 transition-colors">
+                  <span className="text-sm font-medium text-sky-600">{step.id}</span>
+                  <span className="text-sm font-medium">{step.name}</span>
+                </div>
+              ) : currentStep === index ? (
+                <div
+                  className="flex flex-col border-l-4 border-sky-600 py-2 pl-4"
+                  aria-current="step"
+                >
+                  <span className="text-sm font-medium text-sky-600">{step.id}</span>
+                  <span className="text-sm font-medium">{step.name}</span>
+                </div>
+              ) : (
+                <div className="group flex flex-col border-l-4 border-gray-200 py-2 pl-4 transition-colors">
+                  <span className="text-sm font-medium text-gray-500">{step.id}</span>
+                  <span className="text-sm font-medium">{step.name}</span>
+                </div>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       {/* Form */}
       <form className="w-3/4 ml-8" onSubmit={handleSubmit(processForm)}>
@@ -451,7 +451,7 @@ const onSubmitPersonnal = async () => {
                   )}
                 </div>
               </div>
-              
+
               {/* Catégorie */}
               <div className="sm:col-span-3">
                 <label
@@ -503,7 +503,7 @@ const onSubmitPersonnal = async () => {
                   )}
                 </div>
               </div>
-              
+
             </div>
           </motion.div>
         )}
@@ -609,26 +609,26 @@ const onSubmitPersonnal = async () => {
                 <div className="mt-2 space-y-4">
                   {adressFields.map((adress, index) => (
                     <div key={adress.id} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {/* Affichage des informations de l'adresse */}
-                    <div>
-                      <p className="text-sm">{adress.additional_contact_name}</p>
+                      {/* Affichage des informations de l'adresse */}
+                      <div>
+                        <p className="text-sm">{adress.additional_contact_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm">{adress.additional_contact_phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm">{adress.location_title}</p>
+                      </div>
+
+                      {/* Bouton de suppression */}
+                      <button
+                        type="button"
+                        onClick={() => removeAdress(index)}
+                        className="text-sm text-red-600 hover:text-red-800"
+                      >
+                        Supprimer
+                      </button>
                     </div>
-                    <div>
-                      <p className="text-sm">{adress.additional_contact_phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">{adress.location_title}</p>
-                    </div>
-          
-                    {/* Bouton de suppression */}
-                    <button
-                      type="button"
-                      onClick={() => removeAdress(index)}
-                      className="text-sm text-red-600 hover:text-red-800"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
                   ))}
                 </div>
 
@@ -640,7 +640,7 @@ const onSubmitPersonnal = async () => {
                 >
                   + Ajouter une addresse
                 </button>
-                {isModalOpen && <DeliveryLocationModal formData={formData1} setFormData={setFormData1} closeModal={closeModal} saveAddress={saveAddress}/>}
+                {isModalOpen && <DeliveryLocationModal formData={formData1} setFormData={setFormData1} closeModal={closeModal} saveAddress={saveAddress} />}
               </div>
 
               {/* Lien en ligne (optionnel) */}
@@ -764,7 +764,7 @@ const onSubmitPersonnal = async () => {
               {/* Bouton d'ajout de billet */}
               <button
                 type="button"
-                onClick={() => appendTickets({ name: "", price: 1 , quantity: 1})}
+                onClick={() => appendTickets({ name: "", price: 1, quantity: 1 })}
                 className="text-sm font-medium text-sky-600 hover:text-sky-800"
               >
                 + Ajouter un type de billet
@@ -1040,13 +1040,13 @@ const onSubmitPersonnal = async () => {
                       <input
                         type="file"
                         accept="video/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            onChange(file);
-                            setPreviewVideo(URL.createObjectURL(file)); // Mise à jour de l'aperçu
-                          }
-                        }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              onChange(file);
+                              setPreviewVideo(URL.createObjectURL(file)); // Mise à jour de l'aperçu
+                            }
+                          }}
                         className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
                       />
 
@@ -1097,31 +1097,31 @@ const onSubmitPersonnal = async () => {
                   Tags
                 </label>
                 <div className="flex flex-wrap gap-2 border border-gray-300 rounded-md p-2 mt-2">
-                {hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="flex items-center bg-sky-100 text-sky-700 px-2 py-1 rounded-md text-sm"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag)}
-                      className="ml-2 text-sky-900 hover:text-red-500"
+                  {hashtags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="flex items-center bg-sky-100 text-sky-700 px-2 py-1 rounded-md text-sm"
                     >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-                <input
-                  type="text"
-                  id="tags"
-                  
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ajouter un hashtag..."
-                  className="flex-1 border-none focus:ring-0 outline-none text-sm p-1"
-                />
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-2 text-sky-900 hover:text-red-500"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    id="tags"
+
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ajouter un hashtag..."
+                    className="flex-1 border-none focus:ring-0 outline-none text-sm p-1"
+                  />
                   {/* <input
                     type="text"
                     id="tags"

@@ -1,6 +1,6 @@
 "use client"
 import { Toaster } from "@/components/ui/toaster";
-import Form from "../component/form"
+import Form from "../../component/form"
 import { useForm, FormProvider } from "react-hook-form";
 
 export default function Home() {
@@ -11,7 +11,7 @@ export default function Home() {
       });
   return (
 
-    <section className='py-24'>
+    <section className='-24'>
       <Toaster/>
       <div className='container'>
         <FormProvider {...methods}>

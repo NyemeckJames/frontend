@@ -60,5 +60,26 @@ export interface Event {
   speakers: Speaker[];
   tickets: Ticket[];
   tags: [];
-  gallery: EventGallery[];
+  event_images: EventGallery[];
 }
+export interface DemandeOrganisateur {
+  id: number; // Ajouté pour l'identification de la demande
+  nom_entreprise: string;
+  facebook?: string | null;
+  twitter?: string | null;
+  numero_cni: string;
+  photo_cni?: string | null;
+  types_evenements: string[]; // JSONField sous forme de tableau de chaînes
+  taille_evenements: string;
+  mode_financement: string;
+  statut: "EN_ATTENTE" | "ACCEPTE" | "REFUSE"; // Valeurs possibles du champ `statut`
+  date_demande: string; // Format ISO (ex: "2025-02-21T14:30:00Z")
+  commentaire_admin?: string | null;
+  user_info: {
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone:string;
+  };
+}
+

@@ -23,11 +23,11 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
     }
     });
   const handlePayment = async () => {
-    if (evenement.evenementLibre) {
-      router.push(`/interfaces/participant/free-inscription-sucess?event_id=${evenement.id}`);
-      return
-    }
-    else{
+    // if (evenement.evenementLibre) {
+    //   router.push(`/interfaces/participant/free-inscription-sucess?event_id=${evenement.id}`);
+    //   return
+    // }
+    // else{
       setLoading(true);
       try {
         const response = await fetch("http://127.0.0.1:8000/users/create_checkout_session/", {
@@ -54,7 +54,7 @@ const EventModal = ({handleShowModal, evenement,userParticipations} : {handleSho
       finally{
         setLoading(false);
       }
-    }
+    // }
   
     
   };
