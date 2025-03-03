@@ -27,10 +27,20 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-    setUser(null);
+    
+      // Supprimer les cookies en les expirant
+      document.cookie = "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+      document.cookie = "user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    
+      // Supprimer les données du localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+    
+      // Redirection vers la page de login
+      // 🔥 Forcer la redirection et recharger complètement la page
+     window.location.href = "/interface/home";
+    
   };
   const goHome = ()=>{
     router.push('/interface/home')

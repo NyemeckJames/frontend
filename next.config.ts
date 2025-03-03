@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/",
-        destination: "/home",
+        destination: "/interface/home",
         permanent: false, // false = redirection 307 (temporaire), true = redirection 308 (permanente)
       },
     ];

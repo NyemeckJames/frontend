@@ -42,6 +42,7 @@
     "next-translate": "^2.6.2",
     "nextjs-progressbar": "^0.0.16",
     "nodemailer": "^6.10.0",
+    "nookies": "^2.5.2",
     "nprogress": "^0.2.0",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",

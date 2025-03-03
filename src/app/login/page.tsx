@@ -38,6 +38,10 @@ export default function LoginPage() {
         throw new Error(data.detail || "Échec de la connexion");
       }
 
+      // Stocker le token et l'utilisateur dans les cookies
+    document.cookie = `token=${data.access}; Path=/;`;
+    document.cookie = `user=${JSON.stringify(data.user)}; Path=/;`;
+
       // Stocker le token dans localStorage (ou cookies si besoin)
       localStorage.setItem("token", data.access);
       localStorage.setItem("refreshToken", data.refresh);
