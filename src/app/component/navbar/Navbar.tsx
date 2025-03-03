@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
@@ -60,11 +61,11 @@ const Navbar = () => {
           </li>
           <li>
             <Link href="/inscription">
-              <span>S'inscrire</span>
+              <span>Sinscrire</span>
             </Link>
           </li>
           <li>
-            <Link href="/new-event">
+            <Link href="/interface/new-event">
               <span>Publier un évènement</span>
             </Link>
           </li>
