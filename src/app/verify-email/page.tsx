@@ -7,7 +7,7 @@ export default function VerifyEmail() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [message, setMessage] = useState("Vérification en cours...");
-  const router = useRouter()
+  const router = useRouter();
   useEffect(() => {
     if (!token) {
       setMessage("Token manquant.");
@@ -16,17 +16,23 @@ export default function VerifyEmail() {
 
     const verifyEmail = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/users/verify-email/?token=${token}`, {
-          method: "GET",
-        });
+        const response = await fetch(
+          `http://localhost:8000/users/verify-email/?token=${token}`,
+          {
+            method: "GET",
+          }
+        );
 
         const data = await response.json();
-        console.log(response)
+        console.log(response);
         if (response.ok) {
           localStorage.setItem("token", data.token);
-          localStorage.setItem("user", JSON.stringify(data.user)); 
+          localStorage.setItem("user", JSON.stringify(data.user));
+          // Stocker le token et l'utilisateur dans les cookies
+          document.cookie = `token=${data.token}; Path=/;`;
+          document.cookie = `user=${JSON.stringify(data.user)}; Path=/;`;
           setMessage("Votre email a été vérifié avec succès.");
-          router.push('/interface/home')
+          router.push("/interface/home");
         } else {
           setMessage(data.error || "Échec de la vérification.");
         }

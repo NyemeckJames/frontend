@@ -76,6 +76,7 @@ export interface DemandeOrganisateur {
   date_demande: string; // Format ISO (ex: "2025-02-21T14:30:00Z")
   commentaire_admin?: string | null;
   user_info: {
+    id: string;
     nom: string;
     prenom: string;
     email: string;
